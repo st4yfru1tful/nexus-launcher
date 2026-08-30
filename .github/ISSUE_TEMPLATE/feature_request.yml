@@ -1,0 +1,28 @@
+name: Feature request
+description: Propose a user problem Nexus could solve without pretending unsupported functionality exists.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Describe the user need rather than only a proposed button or integration.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed approach
+      description: Explain the expected behavior, including unavailable/offline states.
+    validations:
+      required: true
+  - type: textarea
+    id: providers
+    attributes:
+      label: Provider, privacy, or security considerations
+      description: If this involves an external service, identify the official API/terms and data that would leave the device.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

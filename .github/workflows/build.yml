@@ -1,0 +1,44 @@
+name: Build and test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and test (.NET 9 / Windows)
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore NexusLauncher.sln
+
+      - name: Build
+        run: dotnet build NexusLauncher.sln --configuration Release --no-restore -p:ContinuousIntegrationBuild=true
+
+      - name: Test
+        run: dotnet test NexusLauncher.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
+
+      - name: Upload test results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: TestResults/**/*.trx
+          if-no-files-found: ignore
+          retention-days: 14

@@ -1,0 +1,72 @@
+name: Bug report
+description: Report reproducible behavior that differs from Nexus's documented behavior.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please do not include API keys, passwords, personal files, complete installation paths, or executable samples. For a security issue, use the process in SECURITY.md instead of this form.
+  - type: input
+    id: version
+    attributes:
+      label: Nexus version or commit
+      description: Include the version shown in About or a commit SHA.
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      description: Run `winver` and provide the edition/build without any personal device name.
+      placeholder: Windows 11 24H2 (build 26100)
+    validations:
+      required: true
+  - type: dropdown
+    id: source
+    attributes:
+      label: Affected area
+      options:
+        - Startup or UI
+        - Local application discovery
+        - Steam discovery
+        - Launching
+        - Search or library display
+        - Installer or portable build
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Use a minimal, safe set of steps.
+      placeholder: |
+        1. Start Nexus
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include sanitized error text or logs if useful.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched existing issues and removed sensitive information.
+          required: true
+        - label: This is not a vulnerability report.
+          required: true
