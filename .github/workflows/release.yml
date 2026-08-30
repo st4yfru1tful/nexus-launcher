@@ -83,13 +83,14 @@ jobs:
               "## What's included",
               '',
               '- Local-first game and application library for Windows.',
-              '- Steam, Windows Registry, Start menu, and user-selected-folder discovery.',
+              '- Steam, Windows Registry, Start menu, and user-selected-folder discovery, plus live Steam Store game search with official-page handoff.',
               '- Manual executable additions, safe launch handoff, favorites, local removal, WinGet search/install handoff, local backup, and safe ZIP mod import.',
+              '- Optional Nexus AI metadata-suggestion client with OAuth + PKCE support for a developer-operated gateway; no OpenAI API key is stored in the launcher.',
               '- Self-contained x64 installer and portable ZIP with SHA-256 checksums.',
               '',
               '## Notes',
               '',
-              'This is an early prerelease. The portable ZIP keeps its data beside the extracted app; the installer uses the normal per-user local data directory. No account, telemetry, cloud sync, online metadata, or AI integration is included. The binaries are unsigned.',
+              'This is an early prerelease. The portable ZIP keeps its data beside the extracted app; the installer uses the normal per-user local data directory. Steam search queries the Steam storefront and opens only its official pages. AI metadata stays disabled until a developer configures the required Nexus gateway and OAuth service; this public build has no hosted gateway. The binaries are unsigned.',
               '',
               'See the README and changelog for supported scope and limitations.'
             ) -join "`n"

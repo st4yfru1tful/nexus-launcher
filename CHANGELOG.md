@@ -8,6 +8,34 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 No unreleased changes yet.
 
+## [0.2.0] - 2026-08-29
+
+### Added
+
+- Steam Store game discovery with search, price/platform presentation, trusted image handling, and an explicit browser handoff to the validated official Store page.
+- Clear Store scopes for Steam games and WinGet software, plus cancellation/stale-result protection when the scope or query changes.
+- An optional, disabled-by-default Nexus AI metadata suggestion flow for a single selected library item.
+- Privacy-minimized AI request construction, local monthly request controls, review-before-apply metadata updates, and encrypted per-user session storage.
+- OAuth authorization-code-with-PKCE client support for a developer-owned Nexus AI gateway, with strict HTTPS configuration and bounded response validation.
+- Nexus AI gateway deployment documentation.
+
+### Changed
+
+- Store and AI UI now explain the trusted-provider handoff and exact AI metadata boundary.
+- Project privacy, security, architecture, and roadmap documentation now describe v0.2 behavior accurately.
+
+### Security and privacy
+
+- Steam results cannot provide arbitrary browser destinations: Nexus constructs official Store URLs from validated numeric app IDs.
+- Steam and gateway clients use HTTPS, disabled redirects, timeouts, response-size limits, and safe failure states.
+- The desktop app does not ask for, store, or directly use an OpenAI API key or OpenAI OAuth token.
+- v0.2.0 does not deploy or configure a production Nexus AI gateway, so AI remains unavailable unless a maintainer supplies one.
+
+### Known limitations
+
+- AI in this release is a secure client foundation for selected-item metadata suggestions, not a deployed service, semantic search, automatic classification, store ranking, or metadata cache.
+- Steam discovery does not establish ownership, availability, age eligibility, purchase state, download state, or installation state.
+
 ## [0.1.1] - 2026-08-29
 
 ### Fixed
@@ -41,6 +69,7 @@ Initial public prerelease of Nexus Launcher for Windows.
 
 - This prerelease does not include Epic, GOG, EA, Ubisoft, Battle.net, Xbox, or itch.io providers; metadata enrichment; connected cloud sync; playtime tracking; automatic updates; or binary code signing.
 
-[Unreleased]: ../../compare/v0.1.1...HEAD
+[Unreleased]: ../../compare/v0.2.0...HEAD
+[0.2.0]: ../../compare/v0.1.1...v0.2.0
 [0.1.1]: ../../compare/v0.1.0...v0.1.1
 [0.1.0]: ../../releases/tag/v0.1.0

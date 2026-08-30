@@ -37,19 +37,25 @@ public sealed class ShellViewModel : ObservableObject
     {
         var discovery = new DiscoveryService(_inspector);
         var libraryService = new LibraryService(_libraryRepository, discovery);
+        var aiOAuthClient = new NexusAiGatewayOAuthClient();
+        var aiMetadataCoordinator = new AiMetadataCoordinator(
+            _settings,
+            _settingsService,
+            new NexusAiGatewayClient(aiOAuthClient));
         LibraryItems = [];
         _home = new HomeViewModel(LibraryItems);
-        _library = new LibraryViewModel(LibraryItems, libraryService, _settings, _settingsService);
+        _library = new LibraryViewModel(LibraryItems, libraryService, _settings, _settingsService, aiMetadataCoordinator);
         _store = new StoreViewModel();
         _mods = new ModsViewModel(LibraryItems);
         _collections = new CollectionsViewModel(LibraryItems);
         _cloud = new CloudViewModel(new BackupService());
-        _settingsPage = new SettingsViewModel(_settingsService, _settings, ApplyTheme);
+        _settingsPage = new SettingsViewModel(_settingsService, _settings, ApplyTheme, aiOAuthClient, _library.RefreshAiAvailability);
+        aiMetadataCoordinator.UsageChanged += _settingsPage.RefreshAiUsage;
         _downloads = new InfoPageViewModel(
             "Downloads",
             "Installation and update activity stays with its trusted source",
             "Nexus does not silently run downloads",
-            "When you choose Install in Store, Nexus starts Windows Package Manager in its own visible window. Use the Library rescan after it finishes to find the new application. Game store clients remain responsible for their own downloads and ownership checks.",
+            "When you choose Install in Store, Nexus starts Windows Package Manager in its own visible window. Use the Library rescan after it finishes to find the new application. Game results open the official Steam page; Steam remains responsible for accounts, ownership, age checks, and downloads.",
             "↓");
 
         ScanCommand = new AsyncRelayCommand(ScanAsync, () => !IsScanning);
@@ -63,7 +69,7 @@ public sealed class ShellViewModel : ObservableObject
         [
             new PaletteCommand("Rescan library", "Check Steam, installed applications, and Start menu shortcuts", ScanCommand),
             new PaletteCommand("Add an executable", "Add a specific .exe to Nexus", _library.AddExecutableCommand),
-            new PaletteCommand("Open Store", "Search WinGet for legitimate software", new RelayCommand(() => NavigateTo("Store"))),
+            new PaletteCommand("Open Store", "Search Steam games and WinGet software", new RelayCommand(() => NavigateTo("Store"))),
             new PaletteCommand("Open Settings", "Change scanning and privacy options", new RelayCommand(() => NavigateTo("Settings"))),
             new PaletteCommand("Show favorites", "Open the local Favorites collection", new RelayCommand(() => NavigateTo("Collections")))
         ];
@@ -143,7 +149,7 @@ public sealed class ShellViewModel : ObservableObject
     {
         1 => "Nexus is local-first. It never needs an account to catalog or launch what is already on this PC.",
         2 => "Nexus can look at Steam manifests, registered Windows applications, and Start menu shortcuts. It does not crawl every drive or upload executable files.",
-        _ => "Store installs use Windows Package Manager only after you explicitly choose Install. Cloud backup is opt-in and local. AI identification is not included in this release."
+        _ => "Store searches either hand off to Steam or start Windows Package Manager after you explicitly choose an action. Cloud backup stays local, and optional AI features require a secure Nexus AI connection."
     };
 
     public async Task InitializeAsync()
@@ -151,6 +157,8 @@ public sealed class ShellViewModel : ObservableObject
         var saved = await _settingsService.LoadAsync();
         CopySettings(saved, _settings);
         ApplyTheme(_settings.Theme);
+        _library.RefreshAiAvailability();
+        await _settingsPage.InitializeAsync();
         var items = await _libraryRepository.LoadAsync();
         foreach (var item in items) LibraryItems.Add(item);
         _home.Refresh();
@@ -237,6 +245,10 @@ public sealed class ShellViewModel : ObservableObject
         target.EnableAnimations = source.EnableAnimations;
         target.IncludeInstalledApplications = source.IncludeInstalledApplications;
         target.IncludeStartMenuShortcuts = source.IncludeStartMenuShortcuts;
+        target.EnableAiMetadata = source.EnableAiMetadata;
+        target.AiMonthlyRequestLimit = source.AiMonthlyRequestLimit;
+        target.AiUsageMonth = source.AiUsageMonth;
+        target.AiRequestsThisMonth = source.AiRequestsThisMonth;
         target.ScanFolders = source.ScanFolders;
         target.IgnoredPaths = source.IgnoredPaths;
         target.IgnoredIdentities = source.IgnoredIdentities;

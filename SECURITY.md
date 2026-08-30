@@ -2,60 +2,111 @@
 
 ## Supported versions
 
-Nexus is pre-release software. Security fixes are made against the latest unreleased work and the most recent published `0.1.x` release, if one exists. Older prerelease builds may not receive patches.
+Nexus is prerelease software. Security fixes target the latest development work
+and the most recent published 0.2.x release, if one exists.
 
 | Version line | Security support |
 | --- | --- |
 | Latest development branch | Best effort |
-| Latest published `0.1.x` | Best effort |
+| Latest published 0.2.x | Best effort |
 | Older versions | Not supported |
 
 ## Reporting a vulnerability
 
-Do not include exploit details, secrets, personal file paths, or proof-of-concept binaries in a public issue.
+Do not include exploit details, secrets, personal paths, or proof-of-concept
+binaries in a public issue.
 
-Use GitHub’s **Private vulnerability reporting** feature for this repository when it is enabled. Maintainers should enable that feature before the first public release. If it is not available, contact the repository owner through GitHub to establish a private channel before sharing technical details.
+Use GitHub's **Private vulnerability reporting** feature for this repository
+when it is available. If it is not enabled, contact the repository owner
+through GitHub to arrange a private channel before sending technical details.
 
-Include enough information to reproduce safely:
+Include:
 
 - affected version or commit
 - supported Windows version
 - concise impact assessment
-- minimal reproduction steps
-- relevant sanitized logs, screenshots, or code references
-- whether the issue requires a local file, malformed manifest, network response, archive, or elevated operation
+- minimal safe reproduction steps
+- sanitized logs, screenshots, or code references
+- whether the issue needs a local file, malformed manifest, network response,
+  archive, or elevated operation
 
-Do not send credentials, API keys, personal databases, or executable samples unless a maintainer explicitly provides a secure transfer channel.
+Never send credentials, API keys, personal databases, or executable samples
+unless a maintainer provides an approved secure transfer path.
 
 ## Security expectations
 
 Nexus is expected to follow these rules:
 
-- Normal use runs as the current user and does not request global administrator privileges.
-- It does not disable or weaken Windows Defender, SmartScreen, UAC, licensing, DRM, or authentication checks.
-- It does not read browser passwords, protected Windows application folders, or unrelated user files to populate a library.
-- It does not automatically execute downloads, remote content, AI output, or unvalidated provider data.
-- Discovery providers isolate parse and I/O failures so an untrusted local manifest cannot terminate a complete scan.
-- Optional credentials are not written to logs, settings files, test fixtures, or source control.
+- Normal use runs as the current user and does not request global administrator
+  privileges.
+- It does not disable or weaken Windows Defender, SmartScreen, UAC, licensing,
+  DRM, ownership, account, age, or regional checks.
+- It does not read browser passwords, protected Windows app folders, or
+  unrelated user files to populate a library.
+- It does not automatically execute downloads, remote content, AI output, or
+  unvalidated provider data.
+- Discovery isolates parse/I/O failures so an untrusted local manifest cannot
+  end a complete scan.
+- Credentials never appear in logs, settings, backup files, tests, source
+  control, release artifacts, or diagnostics.
+
+## Store-provider boundary
+
+The Steam game catalog is an untrusted network input. Nexus accepts only
+well-formed app IDs, constructs the official Store URL from that validated
+numeric ID, allows HTTPS storefront links only to store.steampowered.com, and
+allows image URLs only from HTTPS steamstatic.com hosts. It does not launch a
+game, purchase, download, install, authenticate, or infer ownership from a
+catalog response.
+
+WinGet installation remains an explicit user-confirmed handoff to the locally
+installed Windows Package Manager. A provider-controlled string must never be
+interpolated into a shell command.
+
+## Nexus AI gateway boundary
+
+The desktop app has no OpenAI API key field and never directly calls OpenAI.
+Its optional OAuth flow is only for a developer-owned Nexus AI gateway:
+
+- Public HTTPS gateway, authorization, and token URLs plus a public client ID
+  are accepted; loopback, query-bearing, credential-bearing, and non-HTTPS
+  configuration values are rejected.
+- OAuth uses authorization-code flow with PKCE, state validation, and a local
+  loopback callback. No desktop client secret is used.
+- OAuth sessions are encrypted with Windows DPAPI for the current user and
+  stored outside settings, logs, and local backups. Disconnect removes the
+  session.
+- Gateway requests are HTTPS-only, do not follow redirects, have short
+  timeouts and response-size limits, and send only a privacy-minimized metadata
+  record.
+- Gateway/model output is untrusted. Nexus validates it, presents it for
+  review, and never auto-launches, downloads, installs, or silently changes
+  launch fields.
+
+A gateway operator must enforce its own authentication, authorization,
+rate-limits, abuse controls, retention policy, and server-side credential
+storage. The public v0.2.0 build contains no configured production gateway.
 
 ## Provider and plugin expectations
 
-Every external provider is a security boundary. A contributor adding one must:
+Every external provider is a security boundary. Contributors must:
 
-- Use documented and permitted APIs or local formats.
-- Validate all untrusted input, including paths, URIs, archives, manifests, and JSON.
-- Apply timeouts, cancellation, size limits, and safe error handling to network/file operations.
-- Avoid command-shell interpolation of provider-controlled text.
-- Avoid executing a path or installer merely because a remote response says to do so.
-- Ask for explicit user action before downloads, installs, updates, elevation, or account sign-in.
-- Describe the provider’s data handling in [PRIVACY.md](PRIVACY.md).
+- Use permitted APIs or documented local formats.
+- Validate untrusted paths, URIs, archives, manifests, and JSON.
+- Apply timeouts, cancellation, response-size limits, and safe error handling.
+- Avoid shell interpolation and never execute a remote destination merely
+  because a response provides it.
+- Ask for user action before downloads, installs, updates, elevation, or
+  sign-in.
+- Update PRIVACY.md with the provider's data handling.
 
-Archive extraction must defend against path traversal, symbolic-link surprises, and resource exhaustion. Update handling must verify the user-visible version and checksum before requesting execution of an installer.
-
-## Credential handling
-
-For development, use environment variables or local secret storage outside the repository. For released functionality, use a supported OS-protected secret mechanism where appropriate. Never commit `.env` files, access tokens, client secrets, certificates, API keys, or passwords. Rotate a secret immediately if it was exposed in a commit, CI log, issue, or release artifact.
+Archive extraction must defend against path traversal, symbolic-link surprises,
+and resource exhaustion. Update handling must verify a user-visible version and
+checksum before asking to run an installer.
 
 ## Disclosure process
 
-Maintainers should acknowledge a private report promptly, assess impact and affected versions, prepare a fix and regression test, and coordinate disclosure with the reporter where possible. The final security advisory should explain affected versions, mitigation, and upgrade guidance without publishing harmful details unnecessarily.
+Maintainers should acknowledge a private report promptly, assess affected
+versions, prepare a fix and regression test, and coordinate disclosure with the
+reporter where possible. The final advisory should give mitigation and upgrade
+guidance without publishing harmful exploit details.

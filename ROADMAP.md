@@ -1,38 +1,65 @@
 # Nexus Launcher roadmap
 
-This roadmap describes priorities, not a guarantee that every item will ship on a particular date. A feature is only considered supported after it has a tested implementation, an understandable failure state, and accurate documentation.
+This roadmap describes priorities, not a guarantee that every item will ship on
+a particular date. A feature is supported only after it has a tested
+implementation, a clear failure state, and accurate documentation.
 
 ## 0.1 — local launcher foundation
 
-- [x] Reliable WPF library experience with loading, empty, and error states.
-- [x] Local Windows application discovery with source-specific diagnostics.
-- [x] Steam local manifest discovery with multi-library support and malformed-file handling.
+- [x] Local WPF library with search, category filters, manual additions,
+  favorites, hide/remove, launch, and open-folder actions.
+- [x] Local Windows, Start Menu, and Steam-manifest discovery with
+  source-specific diagnostics and duplicate handling.
 - [x] Safe executable or provider-URI launching.
-- [x] Duplicate resolution and user-visible provider status.
-- [x] Deterministic parser, normalization, discovery, and WinGet table-parser tests.
-- [x] Installer, portable ZIP, checksum verification, and a public prerelease once validated.
+- [x] WinGet package search/install handoff after explicit confirmation.
+- [x] Local mod-archive import and local library/settings backup/restore.
+- [x] Installer, portable ZIP, checksum verification, and public prerelease.
 
-## Next — catalog quality
+## 0.2 — trusted discovery and AI foundation
 
-- [ ] Editable metadata, tags, custom collections, install-size calculation, and durable playtime tracking beyond the current local library fields.
-- [ ] Additional launcher providers selected for reliable local formats and permitted access.
-- [ ] Better application classification that excludes installers, helpers, and system components by default.
-- [ ] Accessibility pass: keyboard navigation, visible focus, screen-reader labels, high contrast, text scaling, and reduced motion.
-- [ ] Diagnostics with secret redaction and actionable scan status.
+- [x] Steam storefront game search with a validated, explicit official-store
+  handoff and no ownership/install claim.
+- [x] Store scope switching that keeps Steam catalog results distinct from
+  WinGet software results.
+- [x] Optional privacy-minimized AI metadata suggestion flow with
+  review-before-apply behavior.
+- [x] OAuth PKCE client for a developer-owned Nexus AI gateway, encrypted
+  per-user session storage, request quota, and safe response validation.
+- [x] Documentation of the precise Store/AI boundaries and no direct OpenAI
+  OAuth/API-key client claim.
 
-## Later — optional connected features
+## Next — complete connected AI deliberately
 
-- [ ] Opt-in metadata enrichment with transparent matching confidence and caching.
-- [ ] Official store-page/package-manager handoff where terms and APIs allow it.
-- [ ] Mod-provider integrations that honor authentication, licensing, archive safety, and rate limits.
-- [ ] Optional AI identification using minimal metadata only, a user-supplied key, request controls, and a local cache.
-- [ ] Optional cloud synchronization with clear ownership, conflict handling, and deletion controls.
-- [ ] Release update checks with version/checksum verification and explicit user approval.
+- [ ] Deploy a maintainer-controlled Nexus identity service and AI gateway,
+  with consent, privacy notice, quotas, rate limits, abuse controls, and
+  server-side credential management.
+- [ ] Add a bounded metadata cache with expiration, provenance, and user
+  controls once a production gateway exists.
+- [ ] Add AI-assisted library/search intent only after defining a minimal
+  request contract, transparent result provenance, and explicit opt-in.
+- [ ] Let users review/edit metadata and add custom collections, install-size
+  calculation, and durable playtime tracking.
+- [ ] Accessibility pass: keyboard navigation, visible focus, screen-reader
+  labels, high contrast, text scaling, and reduced motion.
+- [ ] Additional launcher providers chosen for reliable local formats and
+  permitted access.
+
+## Later
+
+- [ ] Official provider integrations where terms and APIs permit them.
+- [ ] Mod-provider integrations with authentication, licensing, archive safety,
+  and rate-limit controls.
+- [ ] Optional cloud synchronization with conflict handling and deletion
+  controls.
+- [ ] Update checks with version/checksum verification and explicit approval.
 
 ## Non-goals
 
-Nexus will not support piracy, DRM or ownership bypasses, credential collection, hidden telemetry, global privilege elevation, disabling Windows security features, or downloading/executing untrusted software automatically.
+Nexus will not support piracy, DRM or ownership bypasses, credential
+collection, hidden telemetry, global privilege elevation, disabling Windows
+security features, or downloading/executing untrusted software automatically.
 
 ## How priorities change
 
-Reliability, safety, privacy, and accessibility outrank breadth. A narrow, well-tested local integration is more valuable than an unverified provider badge. Please use GitHub issues and discussions once the repository is public to suggest priorities.
+Reliability, safety, privacy, and accessibility outrank breadth. A narrow,
+well-tested provider is more valuable than a broad unverified badge.

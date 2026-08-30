@@ -16,6 +16,7 @@ public sealed class LibraryViewModel : PageViewModel
     private readonly LibraryService _libraryService;
     private readonly AppSettings _settings;
     private readonly SettingsService _settingsService;
+    private readonly AiMetadataCoordinator _aiMetadataCoordinator;
     private string _searchText = string.Empty;
     private string _selectedCategory = "All items";
     private bool _showHidden;
@@ -27,13 +28,18 @@ public sealed class LibraryViewModel : PageViewModel
         ObservableCollection<LibraryItem> library,
         LibraryService libraryService,
         AppSettings settings,
-        SettingsService settingsService)
+        SettingsService settingsService,
+        AiMetadataCoordinator? aiMetadataCoordinator = null)
         : base("Library", "Every game and application you choose to keep in Nexus")
     {
         _library = library;
         _libraryService = libraryService;
         _settings = settings;
         _settingsService = settingsService;
+        _aiMetadataCoordinator = aiMetadataCoordinator ?? new AiMetadataCoordinator(
+            settings,
+            settingsService,
+            new NexusAiGatewayClient());
         // The library and collections pages share the same source collection, so this
         // view must not be the collection's shared default view. Each page owns its
         // filter independently.
@@ -46,6 +52,7 @@ public sealed class LibraryViewModel : PageViewModel
         ToggleFavoriteCommand = new AsyncRelayCommand(ToggleFavorite, () => SelectedItem is not null);
         HideCommand = new AsyncRelayCommand(HideSelected, () => SelectedItem is not null);
         RemoveCommand = new AsyncRelayCommand(RemoveSelected, () => SelectedItem is not null);
+        AiMetadataCommand = new AsyncRelayCommand(RequestAiMetadataAsync, CanRequestAiMetadata);
     }
 
     public ICollectionView Items { get; }
@@ -56,6 +63,7 @@ public sealed class LibraryViewModel : PageViewModel
     public AsyncRelayCommand ToggleFavoriteCommand { get; }
     public AsyncRelayCommand HideCommand { get; }
     public AsyncRelayCommand RemoveCommand { get; }
+    public AsyncRelayCommand AiMetadataCommand { get; }
 
     public string SearchText
     {
@@ -89,6 +97,7 @@ public sealed class LibraryViewModel : PageViewModel
                 ToggleFavoriteCommand.RaiseCanExecuteChanged();
                 HideCommand.RaiseCanExecuteChanged();
                 RemoveCommand.RaiseCanExecuteChanged();
+                AiMetadataCommand.RaiseCanExecuteChanged();
             }
         }
     }
@@ -117,6 +126,8 @@ public sealed class LibraryViewModel : PageViewModel
     }
 
     public async Task SaveAsync() => await _libraryService.SaveAsync(_library);
+
+    public void RefreshAiAvailability() => AiMetadataCommand.RaiseCanExecuteChanged();
 
     private bool FilterItem(object value)
     {
@@ -190,6 +201,66 @@ public sealed class LibraryViewModel : PageViewModel
         SelectedItem = null;
         await _libraryService.SaveAsync(_library);
         Status = $"Removed {item.Name} from Nexus. It will stay excluded from future scans; use Add executable to restore it.";
+    }
+
+    private bool CanRequestAiMetadata() => SelectedItem is not null && _aiMetadataCoordinator.CanRequest;
+
+    private async Task RequestAiMetadataAsync()
+    {
+        if (SelectedItem is null) return;
+        try
+        {
+            var item = SelectedItem;
+            Status = $"Requesting reviewable metadata suggestions for {item.Name}…";
+            var outcome = await _aiMetadataCoordinator.SuggestAsync(item);
+            if (!outcome.Succeeded || outcome.Suggestion is null)
+            {
+                Status = outcome.Message;
+                MessageBox.Show(outcome.Message, "Nexus AI metadata", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var suggestion = outcome.Suggestion;
+            var tags = suggestion.Genres.Concat(suggestion.Tags).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            var preview = new List<string>();
+            if (!string.IsNullOrWhiteSpace(suggestion.CanonicalTitle)) preview.Add($"Reference match: {suggestion.CanonicalTitle} (Nexus keeps your current title)");
+            if (!string.IsNullOrWhiteSpace(suggestion.Description)) preview.Add("Description: available");
+            if (tags.Count > 0) preview.Add($"Tags: {string.Join(", ", tags)}");
+            if (suggestion.Confidence is { } confidence) preview.Add($"Match confidence: {confidence:P0}");
+
+            var confirmation = MessageBox.Show(
+                "Nexus sent only the item title, provider, publisher, version, executable filename, and parent-folder name to the connected Nexus AI service. No files, full paths, launch arguments, or library contents were sent.\n\n" +
+                string.Join("\n", preview) +
+                "\n\nApply this by filling an empty description and adding new tags? Nexus will not change how the item launches.",
+                "Review AI metadata",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+            if (confirmation != MessageBoxResult.Yes)
+            {
+                Status = "AI metadata suggestions were not applied.";
+                return;
+            }
+
+            var changes = AiMetadataCoordinator.ApplyApprovedSuggestion(item, suggestion);
+            if (changes == 0)
+            {
+                Status = "The approved AI suggestion did not add new descriptive metadata.";
+                return;
+            }
+
+            await _libraryService.SaveAsync(_library);
+            Items.Refresh();
+            Status = $"Applied {changes} AI metadata update{(changes == 1 ? string.Empty : "s")} to {item.Name}.";
+        }
+        catch (Exception)
+        {
+            Status = "AI metadata could not be requested.";
+            MessageBox.Show(
+                "Nexus AI metadata could not be requested. Your local library was not changed.",
+                "Nexus AI metadata",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
     }
 
     private async void AddExecutable()
