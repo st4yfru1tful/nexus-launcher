@@ -1,0 +1,71 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+[Tt]est[Rr]esult*/
+[Aa]rtifacts/
+packages/
+
+# Local work created by Codex or release packaging
+/outputs/
+/work/
+/installer/output/
+
+# Visual Studio, Rider, and VS Code user state
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+*.DotSettings.user
+
+# .NET tooling
+*.nupkg
+*.snupkg
+*.nuget.props
+*.nuget.targets
+project.lock.json
+artifacts/
+
+# Test coverage
+coverage/
+coverage.*
+*.coverage
+*.coveragexml
+*.trx
+
+# Local application data, databases, and diagnostic reports
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.log
+*.dmp
+*.diag
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+appsettings.Local.json
+appsettings.Development.Local.json
+secrets.json
+*.pfx
+*.p12
+*.snk
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Installer tool output
+*.msi
+*.msix
+*.msixbundle
+
