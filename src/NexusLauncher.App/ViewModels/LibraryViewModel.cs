@@ -14,6 +14,8 @@ public sealed class LibraryViewModel : PageViewModel
 {
     private readonly ObservableCollection<LibraryItem> _library;
     private readonly LibraryService _libraryService;
+    private readonly AppSettings _settings;
+    private readonly SettingsService _settingsService;
     private string _searchText = string.Empty;
     private string _selectedCategory = "All items";
     private bool _showHidden;
@@ -21,12 +23,21 @@ public sealed class LibraryViewModel : PageViewModel
     private string _status = "Ready";
     private LibraryItem? _selectedItem;
 
-    public LibraryViewModel(ObservableCollection<LibraryItem> library, LibraryService libraryService)
+    public LibraryViewModel(
+        ObservableCollection<LibraryItem> library,
+        LibraryService libraryService,
+        AppSettings settings,
+        SettingsService settingsService)
         : base("Library", "Every game and application you choose to keep in Nexus")
     {
         _library = library;
         _libraryService = libraryService;
-        Items = CollectionViewSource.GetDefaultView(_library);
+        _settings = settings;
+        _settingsService = settingsService;
+        // The library and collections pages share the same source collection, so this
+        // view must not be the collection's shared default view. Each page owns its
+        // filter independently.
+        Items = new ListCollectionView(_library);
         Items.Filter = FilterItem;
         _library.CollectionChanged += OnLibraryChanged;
         AddExecutableCommand = new RelayCommand(AddExecutable);
@@ -90,11 +101,19 @@ public sealed class LibraryViewModel : PageViewModel
             return;
         }
 
-        var item = _libraryService.CreateManualItem(executablePath);
+        var item = LibraryService.CreateManualItem(executablePath);
+        var restoredAutomaticDiscovery = LibrarySuppression.RestoreManualAddition(_settings, item);
+        if (restoredAutomaticDiscovery)
+        {
+            await _settingsService.SaveAsync(_settings);
+        }
+
         _library.Add(item);
         await _libraryService.SaveAsync(_library);
         SelectedItem = item;
-        Status = $"Added {item.Name}.";
+        Status = restoredAutomaticDiscovery
+            ? $"Added {item.Name}; its matching local scan exclusion was cleared."
+            : $"Added {item.Name}.";
     }
 
     public async Task SaveAsync() => await _libraryService.SaveAsync(_library);
@@ -125,7 +144,7 @@ public sealed class LibraryViewModel : PageViewModel
         if (SelectedItem is null) return;
         try
         {
-            await _libraryService.LaunchAsync(SelectedItem);
+            await LibraryService.LaunchAsync(SelectedItem);
             await _libraryService.SaveAsync(_library);
             Status = $"Launched {SelectedItem.Name}.";
         }
@@ -165,10 +184,12 @@ public sealed class LibraryViewModel : PageViewModel
         var item = SelectedItem;
         var answer = MessageBox.Show($"Remove {item.Name} from Nexus? This does not uninstall it or change any files.", "Remove from Nexus", MessageBoxButton.YesNo, MessageBoxImage.Question);
         if (answer != MessageBoxResult.Yes) return;
+        LibrarySuppression.Suppress(_settings, item);
+        await _settingsService.SaveAsync(_settings);
         _library.Remove(item);
         SelectedItem = null;
         await _libraryService.SaveAsync(_library);
-        Status = $"Removed {item.Name} from Nexus.";
+        Status = $"Removed {item.Name} from Nexus. It will stay excluded from future scans; use Add executable to restore it.";
     }
 
     private async void AddExecutable()

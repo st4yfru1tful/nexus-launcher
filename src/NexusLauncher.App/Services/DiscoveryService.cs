@@ -15,11 +15,14 @@ public sealed class DiscoveryService(ExecutableInspector inspector)
 {
     private readonly ExecutableInspector _inspector = inspector;
 
-    public async Task<IReadOnlyList<LibraryItem>> DiscoverAsync(AppSettings settings, IProgress<string>? progress = null, CancellationToken cancellationToken = default)
+    public async Task<LibraryDiscoveryResult> DiscoverAsync(AppSettings settings, IProgress<string>? progress = null, CancellationToken cancellationToken = default)
     {
         var candidates = new List<LibraryItem>();
+        var issues = new List<DiscoveryIssue>();
         progress?.Report("Checking Steam, installed applications, and Start menu shortcuts…");
-        candidates.AddRange(await DiscoverThroughProvidersAsync(settings, cancellationToken));
+        var providerResult = await DiscoverThroughProvidersAsync(settings, cancellationToken);
+        candidates.AddRange(providerResult.Items);
+        issues.AddRange(providerResult.Issues);
 
         foreach (var folder in settings.ScanFolders.Where(Directory.Exists))
         {
@@ -28,10 +31,10 @@ public sealed class DiscoveryService(ExecutableInspector inspector)
             candidates.AddRange(await Task.Run(() => DiscoverFolder(folder, cancellationToken).ToArray(), cancellationToken));
         }
 
-        return Deduplicate(candidates, settings.IgnoredPaths);
+        return new LibraryDiscoveryResult(Deduplicate(candidates, settings), issues);
     }
 
-    private static async Task<IReadOnlyList<LibraryItem>> DiscoverThroughProvidersAsync(AppSettings settings, CancellationToken cancellationToken)
+    private static async Task<LibraryDiscoveryResult> DiscoverThroughProvidersAsync(AppSettings settings, CancellationToken cancellationToken)
     {
         var providers = new List<IInstallationDiscoveryProvider> { new SteamDiscoveryProvider() };
         if (settings.IncludeInstalledApplications)
@@ -49,7 +52,7 @@ public sealed class DiscoveryService(ExecutableInspector inspector)
             async () => await coordinator.DiscoverAsync(new DiscoveryRequest { IsQuickScan = true }, cancellationToken),
             cancellationToken);
         var deduplicated = new LibraryItemDuplicateDetector().Deduplicate(scan.Items).UniqueItems;
-        return deduplicated.Select(ToLibraryItem).ToArray();
+        return new LibraryDiscoveryResult(deduplicated.Select(ToLibraryItem).ToArray(), scan.Issues);
     }
 
     private static LibraryItem ToLibraryItem(DiscoveredInstallation installation)
@@ -128,7 +131,7 @@ public sealed class DiscoveryService(ExecutableInspector inspector)
                     yield return new LibraryItem
                     {
                         Name = displayName.Trim(),
-                        Category = _inspector.Classify(displayName, entry.GetValue("Publisher") as string, installPath),
+                        Category = ExecutableInspector.Classify(displayName, entry.GetValue("Publisher") as string, installPath),
                         ExecutablePath = executable,
                         InstallPath = Directory.Exists(installPath) ? installPath : Path.GetDirectoryName(executable),
                         WorkingDirectory = Path.GetDirectoryName(executable),
@@ -222,7 +225,7 @@ public sealed class DiscoveryService(ExecutableInspector inspector)
                     continue;
                 }
 
-                var item = _inspector.CreateFromExecutable(target);
+                var item = ExecutableInspector.CreateFromExecutable(target);
                 item.Name = Path.GetFileNameWithoutExtension(shortcut);
                 item.Provider = "Start Menu";
                 yield return item;
@@ -248,7 +251,7 @@ public sealed class DiscoveryService(ExecutableInspector inspector)
             cancellationToken.ThrowIfCancellationRequested();
             if (_inspector.IsLikelyLaunchable(executable))
             {
-                yield return _inspector.CreateFromExecutable(executable);
+                yield return ExecutableInspector.CreateFromExecutable(executable);
             }
         }
     }
@@ -259,11 +262,11 @@ public sealed class DiscoveryService(ExecutableInspector inspector)
         catch { return []; }
     }
 
-    private static IReadOnlyList<LibraryItem> Deduplicate(IEnumerable<LibraryItem> candidates, IEnumerable<string> ignoredPaths)
+    private static List<LibraryItem> Deduplicate(IEnumerable<LibraryItem> candidates, AppSettings settings)
     {
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         return candidates
-            .Where(item => !ignoredPaths.Any(path => !string.IsNullOrWhiteSpace(path) && (item.ExecutablePath?.StartsWith(path, StringComparison.OrdinalIgnoreCase) == true || item.InstallPath?.StartsWith(path, StringComparison.OrdinalIgnoreCase) == true)))
+            .Where(item => !LibrarySuppression.IsSuppressed(settings, item))
             .Where(item => !string.IsNullOrWhiteSpace(item.Name))
             .Where(item => seen.Add(IdentityFor(item)))
             .OrderBy(item => item.Name)
@@ -338,8 +341,8 @@ public sealed class DiscoveryService(ExecutableInspector inspector)
             var shellType = Type.GetTypeFromProgID("WScript.Shell");
             if (shellType is null) return null;
             var shell = Activator.CreateInstance(shellType);
-            var shortcut = shellType.InvokeMember("CreateShortcut", BindingFlags.InvokeMethod, null, shell, [shortcutPath]);
-            return shortcut?.GetType().InvokeMember("TargetPath", BindingFlags.GetProperty, null, shortcut, null) as string;
+            var shortcut = shellType.InvokeMember("CreateShortcut", BindingFlags.InvokeMethod, null, shell, [shortcutPath], System.Globalization.CultureInfo.InvariantCulture);
+            return shortcut?.GetType().InvokeMember("TargetPath", BindingFlags.GetProperty, null, shortcut, null, System.Globalization.CultureInfo.InvariantCulture) as string;
         }
         catch
         {
@@ -347,3 +350,6 @@ public sealed class DiscoveryService(ExecutableInspector inspector)
         }
     }
 }
+
+/// <summary>Items found by the local scan plus non-fatal, source-specific diagnostics.</summary>
+public sealed record LibraryDiscoveryResult(IReadOnlyList<LibraryItem> Items, IReadOnlyList<DiscoveryIssue> Issues);

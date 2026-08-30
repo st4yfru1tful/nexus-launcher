@@ -16,9 +16,12 @@ public sealed class CollectionsViewModel : PageViewModel
         : base("Collections", "Useful local views of the library you already own")
     {
         _library = library;
-        Items = CollectionViewSource.GetDefaultView(_library);
+        // Use a private view because the Library page applies a different filter to
+        // this shared source collection.
+        Items = new ListCollectionView(_library);
         Items.Filter = Filter;
         _library.CollectionChanged += OnChanged;
+        foreach (var item in _library) item.PropertyChanged += OnItemPropertyChanged;
     }
 
     public IReadOnlyList<string> Collections { get; } = ["Favorites", "Recently Played", "Never Played", "Steam", "Manual Additions"];
@@ -43,5 +46,18 @@ public sealed class CollectionsViewModel : PageViewModel
         };
     }
 
-    private void OnChanged(object? sender, NotifyCollectionChangedEventArgs e) => Items.Refresh();
+    private void OnChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.OldItems is not null)
+        {
+            foreach (LibraryItem item in e.OldItems) item.PropertyChanged -= OnItemPropertyChanged;
+        }
+        if (e.NewItems is not null)
+        {
+            foreach (LibraryItem item in e.NewItems) item.PropertyChanged += OnItemPropertyChanged;
+        }
+        Items.Refresh();
+    }
+
+    private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e) => Items.Refresh();
 }

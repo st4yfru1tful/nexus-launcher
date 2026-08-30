@@ -79,15 +79,31 @@ jobs:
             gh release upload $env:RELEASE_TAG artifacts/NexusLauncher-Setup-x64.exe artifacts/NexusLauncher-portable-x64.zip artifacts/SHA256SUMS.txt
           }
           else {
+            $releaseNotes = @(
+              "## What's included",
+              '',
+              '- Local-first game and application library for Windows.',
+              '- Steam, Windows Registry, Start menu, and user-selected-folder discovery.',
+              '- Manual executable additions, safe launch handoff, favorites, local removal, WinGet search/install handoff, local backup, and safe ZIP mod import.',
+              '- Self-contained x64 installer and portable ZIP with SHA-256 checksums.',
+              '',
+              '## Notes',
+              '',
+              'This is an early prerelease. The portable ZIP keeps its data beside the extracted app; the installer uses the normal per-user local data directory. No account, telemetry, cloud sync, online metadata, or AI integration is included. The binaries are unsigned.',
+              '',
+              'See the README and changelog for supported scope and limitations.'
+            ) -join "`n"
             $arguments = @(
               'release', 'create', $env:RELEASE_TAG,
               'artifacts/NexusLauncher-Setup-x64.exe',
               'artifacts/NexusLauncher-portable-x64.zip',
               'artifacts/SHA256SUMS.txt',
-              '--generate-notes',
+              '--notes', $releaseNotes,
               '--title', "Nexus Launcher $env:RELEASE_TAG"
             )
-            if ($env:RELEASE_TAG -match '-') {
+            # v0.1.0 is intentionally the project's first public prerelease;
+            # subsequent prerelease tags continue to use normal SemVer suffixes.
+            if ($env:RELEASE_TAG -eq 'v0.1.0' -or $env:RELEASE_TAG -match '-') {
               $arguments += '--prerelease'
             }
             & gh @arguments

@@ -55,6 +55,10 @@ try {
     if (-not ($archiveEntries.FullName -contains 'NexusLauncher.exe')) {
         throw 'The portable archive does not contain NexusLauncher.exe at its root.'
     }
+
+    if (-not ($archiveEntries.FullName -contains 'NexusLauncher.portable')) {
+        throw 'The portable archive does not contain the NexusLauncher.portable mode marker.'
+    }
 }
 finally {
     $zip.Dispose()

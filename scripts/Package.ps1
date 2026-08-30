@@ -60,6 +60,7 @@ $artifactsDirectory = [System.IO.Path]::GetFullPath($ArtifactsDirectory)
 $publishDirectory = Join-Path $artifactsDirectory 'publish'
 $portableDirectory = Join-Path $artifactsDirectory 'portable'
 $installerDirectory = Join-Path $artifactsDirectory 'installer'
+$portableModeMarkerFileName = 'NexusLauncher.portable'
 
 New-Item -ItemType Directory -Force -Path $artifactsDirectory | Out-Null
 Reset-ManagedDirectory -Path $publishDirectory -Root $artifactsDirectory
@@ -96,6 +97,7 @@ try {
     $portablePayload = Join-Path $portableDirectory 'NexusLauncher'
     New-Item -ItemType Directory -Force -Path $portablePayload | Out-Null
     Copy-Item -Path (Join-Path $publishDirectory '*') -Destination $portablePayload -Recurse -Force
+    Set-Content -LiteralPath (Join-Path $portablePayload $portableModeMarkerFileName) -Value 'Nexus Launcher portable mode marker v1' -Encoding ascii
 
     $portableArchive = Join-Path $artifactsDirectory 'NexusLauncher-portable-x64.zip'
     Compress-Archive -Path (Join-Path $portablePayload '*') -DestinationPath $portableArchive -CompressionLevel Optimal -Force
@@ -115,7 +117,7 @@ try {
         }
     }
 
-    if (Test-Path -LiteralPath $installerScript -PathType Leaf -and $null -ne $iscc) {
+    if ((Test-Path -LiteralPath $installerScript -PathType Leaf) -and $null -ne $iscc) {
         $isccPath = if ($iscc -is [System.Management.Automation.ApplicationInfo]) { $iscc.Path } else { $iscc.FullName }
         & $isccPath "/DMyAppVersion=$Version" "/DSourceDir=$publishDirectory" "/O$installerDirectory" '/FNexusLauncher-Setup-x64' $installerScript
         if ($LASTEXITCODE -ne 0) { throw 'Inno Setup compilation failed.' }

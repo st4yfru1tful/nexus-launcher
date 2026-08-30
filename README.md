@@ -4,7 +4,7 @@
 
 Nexus Launcher is a local-first Windows launcher for bringing installed games and desktop applications into one searchable library. It is built as a WPF application on .NET 9 and targets 64-bit Windows 10 (22H2 or later) and Windows 11.
 
-> **Release status:** Nexus is pre-release software. The first tagged build is planned as `v0.1.0`; it should be treated as an early release until a stable release is published.
+> **Release status:** Nexus `v0.1.0` is pre-release software. Treat it as an early release until a stable version is published.
 
 ## Why Nexus
 
@@ -41,11 +41,18 @@ This is deliberately not a promise that every commercial launcher, store, cloud 
 
 ## Download and installation
 
-When a release has been published, download it from the repository's **Releases** page. Release assets are named:
+Download release assets from the repository's [Releases page](https://github.com/st4yfru1tful/nexus-launcher/releases). Assets are named:
 
 - `NexusLauncher-Setup-x64.exe` — the Windows installer.
 - `NexusLauncher-portable-x64.zip` — a self-contained portable build.
 - `SHA256SUMS.txt` — SHA-256 hashes for the two distributables.
+
+Extract the portable ZIP as a whole and keep `NexusLauncher.portable` next to
+`NexusLauncher.exe`. That marker activates portable mode: library, settings,
+cache, and diagnostic files are stored in the adjacent `NexusLauncherData`
+folder rather than `%LOCALAPPDATA%\NexusLauncher`. The installer deliberately
+does not include the marker, so installed and portable copies never share a
+data root. Do not copy the marker into an installed Nexus directory.
 
 Verify a download before opening it:
 
@@ -67,7 +74,7 @@ Code signing is not configured by this repository alone; an unsigned release may
 - Inno Setup 6 only when building an installer
 
 ```powershell
-git clone <repository-url>
+git clone https://github.com/st4yfru1tful/nexus-launcher.git
 Set-Location nexus-launcher
 dotnet restore NexusLauncher.sln
 dotnet build NexusLauncher.sln --configuration Debug
@@ -79,7 +86,7 @@ The checked-in project files are the source of truth for the exact SDK, target f
 
 ## Packaging a release candidate
 
-The packaging script publishes a folder-based, self-contained `win-x64` application, creates a portable ZIP, and—when Inno Setup is installed—compiles the installer and writes checksums. A folder publish is intentional: it is the more reliable deployment shape for a WPF app and keeps both the installer and portable archive straightforward to inspect.
+The packaging script publishes a folder-based, self-contained `win-x64` application, adds the portable-only mode marker to the ZIP payload, and—when Inno Setup is installed—compiles the installer and writes checksums. A folder publish is intentional: it is the more reliable deployment shape for a WPF app and keeps both the installer and portable archive straightforward to inspect.
 
 ```powershell
 .\scripts\Package.ps1 -Version 0.1.0 -RequireInstaller

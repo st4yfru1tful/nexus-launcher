@@ -7,7 +7,7 @@ Thanks for helping improve Nexus. The goal is a reliable local-first Windows lau
 You need Windows 10 22H2+ or Windows 11 and the .NET 9 SDK. Visual Studio 2022 with the **.NET desktop development** workload is helpful for WPF work, but the command line is the supported baseline.
 
 ```powershell
-git clone <repository-url>
+git clone https://github.com/st4yfru1tful/nexus-launcher.git
 Set-Location nexus-launcher
 dotnet restore NexusLauncher.sln
 dotnet build NexusLauncher.sln --configuration Debug

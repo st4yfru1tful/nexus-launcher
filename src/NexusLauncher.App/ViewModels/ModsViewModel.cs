@@ -11,16 +11,14 @@ namespace NexusLauncher.App.ViewModels;
 public sealed class ModsViewModel : PageViewModel
 {
     private readonly ObservableCollection<LibraryItem> _library;
-    private readonly ModArchiveService _archiveService;
     private LibraryItem? _selectedGame;
     private string _status = "Select a discovered game to manage a local Mods folder.";
     private bool _isBusy;
 
-    public ModsViewModel(ObservableCollection<LibraryItem> library, ModArchiveService archiveService)
+    public ModsViewModel(ObservableCollection<LibraryItem> library)
         : base("Mods", "Safe local mod archive management")
     {
         _library = library;
-        _archiveService = archiveService;
         _library.CollectionChanged += OnLibraryChanged;
         ImportZipCommand = new AsyncRelayCommand(ImportZipAsync, () => SelectedGame?.InstallPath is not null && !IsBusy);
         OpenFolderCommand = new RelayCommand(OpenModFolder, () => SelectedGame?.InstallPath is not null);
@@ -64,7 +62,7 @@ public sealed class ModsViewModel : PageViewModel
         IsBusy = true;
         try
         {
-            var result = await _archiveService.ExtractSafelyAsync(picker.FileName, ModFolder);
+            var result = await ModArchiveService.ExtractSafelyAsync(picker.FileName, ModFolder);
             Status = $"Extracted {result.FilesExtracted} file{(result.FilesExtracted == 1 ? string.Empty : "s")} into {result.Destination}";
         }
         catch (Exception exception)

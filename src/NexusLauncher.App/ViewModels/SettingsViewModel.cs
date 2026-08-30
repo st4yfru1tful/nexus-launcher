@@ -12,6 +12,9 @@ public sealed class SettingsViewModel : PageViewModel
     private readonly SettingsService _settingsService;
     private readonly AppSettings _settings;
     private readonly Action<AppTheme> _applyTheme;
+    private readonly string _dataStorageDescription = NexusPaths.IsPortableMode
+        ? "Portable mode is active. Your library, settings, cache, and diagnostics stay in NexusLauncherData next to this copy of Nexus."
+        : "Your library and settings are stored under LocalAppData. No account is required.";
     private string _status = "Changes are saved locally on this PC.";
 
     public SettingsViewModel(SettingsService settingsService, AppSettings settings, Action<AppTheme> applyTheme)
@@ -28,6 +31,7 @@ public sealed class SettingsViewModel : PageViewModel
 
     public IReadOnlyList<AppTheme> Themes { get; } = Enum.GetValues<AppTheme>();
     public List<string> ScanFolders => _settings.ScanFolders;
+    public string DataStorageDescription => _dataStorageDescription;
     private string? _selectedScanFolder;
     public string? SelectedScanFolder { get => _selectedScanFolder; set { if (SetProperty(ref _selectedScanFolder, value)) RemoveScanFolderCommand.RaiseCanExecuteChanged(); } }
     public bool IncludeInstalledApplications { get => _settings.IncludeInstalledApplications; set { _settings.IncludeInstalledApplications = value; OnPropertyChanged(); } }

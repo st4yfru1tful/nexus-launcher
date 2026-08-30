@@ -3,9 +3,9 @@ using NexusLauncher.App.Models;
 
 namespace NexusLauncher.App.Services;
 
-public sealed class ModArchiveService
+public static class ModArchiveService
 {
-    public async Task<ModArchiveResult> ExtractSafelyAsync(string archivePath, string destination, CancellationToken cancellationToken = default)
+    public static async Task<ModArchiveResult> ExtractSafelyAsync(string archivePath, string destination, CancellationToken cancellationToken = default)
     {
         if (!File.Exists(archivePath)) throw new FileNotFoundException("The selected mod archive no longer exists.", archivePath);
         if (!Path.GetExtension(archivePath).Equals(".zip", StringComparison.OrdinalIgnoreCase))

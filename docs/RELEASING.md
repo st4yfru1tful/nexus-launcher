@@ -16,7 +16,7 @@ This checklist is for maintainers. A GitHub release must contain real, launchabl
    ```
 
 5. Check `git status` and inspect staged changes for credentials, local databases, logs, user paths, and build output.
-6. Test the installer and portable archive on a clean Windows environment when possible. Confirm that the application starts and that uninstalling does not silently delete user data.
+6. Test the installer and portable archive on a clean Windows environment when possible. Confirm that the application starts and that uninstalling does not silently delete user data. For the portable archive, extract it whole, confirm `NexusLauncher.portable` is beside `NexusLauncher.exe`, and confirm its data is created in the adjacent `NexusLauncherData` directory rather than `%LOCALAPPDATA%\NexusLauncher`.
 7. If code signing is configured outside this repository, verify the signature on the final installer. Do not imply a build is signed when it is not.
 
 ## Publish
@@ -34,7 +34,7 @@ The workflow uses the repository `GITHUB_TOKEN` to:
 2. install Inno Setup and build `NexusLauncher-Setup-x64.exe`;
 3. create `NexusLauncher-portable-x64.zip`;
 4. write `SHA256SUMS.txt`;
-5. verify file names, hashes, and portable archive contents; and
+5. verify file names, hashes, the portable mode marker, and portable archive contents; and
 6. create or update the matching GitHub Release with those assets.
 
 Do not create a GitHub Release manually before artifacts are verified. Published assets are intentionally immutable: the workflow refuses to overwrite an existing asset. If a distributed binary must change, create a new version tag and release instead of replacing the existing one.
@@ -46,7 +46,7 @@ Do not create a GitHub Release manually before artifacts are verified. Published
 - `MyAppVersion` — the release version without the `v` prefix.
 - `SourceDir` — the self-contained published app directory.
 
-The installer script must accept those values (with local-development defaults), install the published files, preserve user data on upgrades, and emit `NexusLauncher-Setup-x64.exe` through the passed Inno output directory. The release workflow installs Inno Setup 6 on the GitHub-hosted Windows runner.
+The installer script must accept those values (with local-development defaults), install the published files, preserve user data on upgrades, exclude the portable-only `NexusLauncher.portable` marker, and emit `NexusLauncher-Setup-x64.exe` through the passed Inno output directory. The release workflow installs Inno Setup 6 on the GitHub-hosted Windows runner. Installed builds use `%LOCALAPPDATA%\NexusLauncher`; portable builds use the marker-selected `NexusLauncherData` folder next to the executable.
 
 ## After publishing
 

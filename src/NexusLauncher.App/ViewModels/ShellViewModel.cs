@@ -36,12 +36,12 @@ public sealed class ShellViewModel : ObservableObject
     public ShellViewModel()
     {
         var discovery = new DiscoveryService(_inspector);
-        var libraryService = new LibraryService(_libraryRepository, discovery, _inspector);
+        var libraryService = new LibraryService(_libraryRepository, discovery);
         LibraryItems = [];
         _home = new HomeViewModel(LibraryItems);
-        _library = new LibraryViewModel(LibraryItems, libraryService);
-        _store = new StoreViewModel(new WingetStoreService());
-        _mods = new ModsViewModel(LibraryItems, new ModArchiveService());
+        _library = new LibraryViewModel(LibraryItems, libraryService, _settings, _settingsService);
+        _store = new StoreViewModel();
+        _mods = new ModsViewModel(LibraryItems);
         _collections = new CollectionsViewModel(LibraryItems);
         _cloud = new CloudViewModel(new BackupService());
         _settingsPage = new SettingsViewModel(_settingsService, _settings, ApplyTheme);
@@ -143,7 +143,7 @@ public sealed class ShellViewModel : ObservableObject
     {
         1 => "Nexus is local-first. It never needs an account to catalog or launch what is already on this PC.",
         2 => "Nexus can look at Steam manifests, registered Windows applications, and Start menu shortcuts. It does not crawl every drive or upload executable files.",
-        _ => "Store installs use Windows Package Manager only after you explicitly choose Install. Cloud backup is opt-in and local. AI identification remains disabled unless you configure it."
+        _ => "Store installs use Windows Package Manager only after you explicitly choose Install. Cloud backup is opt-in and local. AI identification is not included in this release."
     };
 
     public async Task InitializeAsync()
@@ -180,12 +180,18 @@ public sealed class ShellViewModel : ObservableObject
         });
         try
         {
-            var result = await new LibraryService(_libraryRepository, new DiscoveryService(_inspector), _inspector)
+            var result = await new LibraryService(_libraryRepository, new DiscoveryService(_inspector))
                 .ScanAndMergeAsync(LibraryItems, _settings, progress);
             _home.Refresh();
             GlobalStatus = result.ItemsAdded == 0
                 ? $"Scan complete — {result.ItemsFound} sources checked; no new items found."
                 : $"Scan complete — added {result.ItemsAdded} item{(result.ItemsAdded == 1 ? string.Empty : "s")}.";
+            if (result.Issues.Count > 0)
+            {
+                var diagnostics = string.Join("; ", result.Issues.Take(2).Select(issue => $"{FormatProviderName(issue.ProviderId)}: {issue.Message}"));
+                var remainder = result.Issues.Count > 2 ? $" (+{result.Issues.Count - 2} more)" : string.Empty;
+                GlobalStatus = $"{GlobalStatus} {result.Issues.Count} source warning{(result.Issues.Count == 1 ? string.Empty : "s")}: {diagnostics}{remainder}";
+            }
             _home.ScanStatus = GlobalStatus;
             _library.Status = GlobalStatus;
         }
@@ -233,7 +239,16 @@ public sealed class ShellViewModel : ObservableObject
         target.IncludeStartMenuShortcuts = source.IncludeStartMenuShortcuts;
         target.ScanFolders = source.ScanFolders;
         target.IgnoredPaths = source.IgnoredPaths;
+        target.IgnoredIdentities = source.IgnoredIdentities;
     }
+
+    private static string FormatProviderName(string providerId) => providerId switch
+    {
+        "steam" => "Steam",
+        "windows-registry" => "Windows registry",
+        "start-menu" => "Start menu",
+        _ => providerId
+    };
 
     private static void ApplyTheme(AppTheme theme)
     {

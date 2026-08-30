@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.ComponentModel;
 using NexusLauncher.App.Infrastructure;
 using NexusLauncher.App.Models;
 
@@ -15,6 +16,7 @@ public sealed class HomeViewModel : PageViewModel
     {
         _library = library;
         _library.CollectionChanged += OnLibraryChanged;
+        foreach (var item in _library) item.PropertyChanged += OnLibraryItemPropertyChanged;
     }
 
     public IEnumerable<LibraryItem> ContinuePlaying => _library
@@ -36,5 +38,18 @@ public sealed class HomeViewModel : PageViewModel
         OnPropertyChanged(nameof(FavoriteCount));
     }
 
-    private void OnLibraryChanged(object? sender, NotifyCollectionChangedEventArgs e) => Refresh();
+    private void OnLibraryChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.OldItems is not null)
+        {
+            foreach (LibraryItem item in e.OldItems) item.PropertyChanged -= OnLibraryItemPropertyChanged;
+        }
+        if (e.NewItems is not null)
+        {
+            foreach (LibraryItem item in e.NewItems) item.PropertyChanged += OnLibraryItemPropertyChanged;
+        }
+        Refresh();
+    }
+
+    private void OnLibraryItemPropertyChanged(object? sender, PropertyChangedEventArgs e) => Refresh();
 }

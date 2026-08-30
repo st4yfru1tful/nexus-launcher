@@ -5,6 +5,8 @@ namespace NexusLauncher.App.Services;
 
 public sealed class ExecutableInspector
 {
+    private readonly string _windowsDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+
     private static readonly string[] IgnoredTerms =
     [
         "uninstall", "unins", "crashreport", "crashpad", "helper", "updater", "update", "setup", "install", "redist",
@@ -19,11 +21,10 @@ public sealed class ExecutableInspector
             return false;
         }
 
-        var windows = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
-        return !path.StartsWith(windows, StringComparison.OrdinalIgnoreCase);
+        return !path.StartsWith(_windowsDirectory, StringComparison.OrdinalIgnoreCase);
     }
 
-    public LibraryItem CreateFromExecutable(string executablePath, bool isManual = false)
+    public static LibraryItem CreateFromExecutable(string executablePath, bool isManual = false)
     {
         var info = TryReadVersionInfo(executablePath);
         var name = FirstNonBlank(info?.ProductName, info?.FileDescription, Path.GetFileNameWithoutExtension(executablePath))!;
@@ -43,7 +44,7 @@ public sealed class ExecutableInspector
         };
     }
 
-    public LibraryCategory Classify(string? name, string? publisher, string? path)
+    public static LibraryCategory Classify(string? name, string? publisher, string? path)
     {
         var text = $"{name} {publisher} {path}".ToLowerInvariant();
         if (text.Contains("steam") || text.Contains("epic games") || text.Contains("gog galaxy") || text.Contains("ubisoft connect") || text.Contains("ea app") || text.Contains("battle.net"))

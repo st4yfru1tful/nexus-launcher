@@ -4,13 +4,13 @@ This roadmap describes priorities, not a guarantee that every item will ship on 
 
 ## 0.1 — local launcher foundation
 
-- [ ] Reliable WPF library experience with loading, empty, and error states.
-- [ ] Local Windows application discovery with source-specific diagnostics.
-- [ ] Steam local manifest discovery with multi-library support and malformed-file handling.
-- [ ] Safe executable or provider-URI launching.
-- [ ] Duplicate resolution and user-visible provider status.
-- [ ] Deterministic parser, normalization, and launch tests.
-- [ ] Installer, portable ZIP, checksum verification, and a public prerelease once validated.
+- [x] Reliable WPF library experience with loading, empty, and error states.
+- [x] Local Windows application discovery with source-specific diagnostics.
+- [x] Steam local manifest discovery with multi-library support and malformed-file handling.
+- [x] Safe executable or provider-URI launching.
+- [x] Duplicate resolution and user-visible provider status.
+- [x] Deterministic parser, normalization, discovery, and WinGet table-parser tests.
+- [x] Installer, portable ZIP, checksum verification, and a public prerelease once validated.
 
 ## Next — catalog quality
 

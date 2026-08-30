@@ -4,9 +4,11 @@ using NexusLauncher.App.Models;
 
 namespace NexusLauncher.App.Services;
 
-public sealed class WingetStoreService
+public static class WingetStoreService
 {
-    public async Task<bool> IsAvailableAsync()
+    private static readonly Regex PackageIdPattern = new("^[A-Za-z0-9._-]+$", RegexOptions.CultureInvariant);
+
+    public static async Task<bool> IsAvailableAsync()
     {
         try
         {
@@ -19,7 +21,7 @@ public sealed class WingetStoreService
         }
     }
 
-    public async Task<IReadOnlyList<StorePackage>> SearchAsync(string query, CancellationToken cancellationToken = default)
+    public static async Task<IReadOnlyList<StorePackage>> SearchAsync(string query, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(query)) return [];
         var output = await RunAsync($"search --query \"{EscapeArgument(query)}\" --accept-source-agreements --disable-interactivity", cancellationToken);
@@ -27,9 +29,12 @@ public sealed class WingetStoreService
         return ParseSearchResults(output.StandardOutput);
     }
 
-    public Process StartInstall(StorePackage package)
+    public static Process StartInstall(StorePackage package)
     {
-        if (string.IsNullOrWhiteSpace(package.Id)) throw new ArgumentException("A WinGet package identifier is required.", nameof(package));
+        if (string.IsNullOrWhiteSpace(package.Id) || !PackageIdPattern.IsMatch(package.Id))
+        {
+            throw new ArgumentException("A valid WinGet package identifier is required.", nameof(package));
+        }
         return Process.Start(new ProcessStartInfo("winget", $"install --id \"{EscapeArgument(package.Id)}\" --exact --accept-package-agreements --accept-source-agreements")
         {
             UseShellExecute = true
@@ -57,31 +62,66 @@ public sealed class WingetStoreService
         return new ProcessOutput(process.ExitCode, await stdout, await stderr);
     }
 
-    private static IReadOnlyList<StorePackage> ParseSearchResults(string output)
+    internal static IReadOnlyList<StorePackage> ParseSearchResults(string output)
     {
         var results = new List<StorePackage>();
-        var headerSeen = false;
+        SearchTableLayout? layout = null;
         foreach (var line in output.Replace("\r", string.Empty).Split('\n'))
         {
             var trimmed = line.Trim();
-            if (!headerSeen)
+            if (layout is null)
             {
-                headerSeen = Regex.IsMatch(trimmed, "^Name\\s+Id\\s+Version\\s+Source", RegexOptions.IgnoreCase);
+                layout = SearchTableLayout.TryCreate(line);
                 continue;
             }
 
             if (string.IsNullOrWhiteSpace(trimmed) || trimmed.All(character => character is '-' or ' ')) continue;
-            var columns = Regex.Split(trimmed, "\\s{2,}");
-            if (columns.Length < 3) continue;
-            var source = columns.Length >= 4 ? columns[^1] : "winget";
-            var version = columns.Length >= 4 ? columns[^2] : string.Empty;
-            var id = columns.Length >= 4 ? columns[^3] : columns[^2];
-            var name = string.Join(" ", columns.Take(columns.Length >= 4 ? columns.Length - 3 : columns.Length - 2));
-            if (string.IsNullOrWhiteSpace(id) || !id.Contains('.', StringComparison.Ordinal)) continue;
+            var name = layout.ReadColumn(line, "Name");
+            var id = layout.ReadColumn(line, "Id");
+            var version = layout.ReadColumn(line, "Version");
+            var source = layout.ReadColumn(line, "Source");
+            if (string.IsNullOrWhiteSpace(id) || !PackageIdPattern.IsMatch(id)) continue;
             results.Add(new StorePackage { Name = name, Id = id, Version = version, Source = source });
         }
 
         return results.Take(40).ToList();
+    }
+
+    /// <summary>
+    /// WinGet writes a fixed-width table, but its headers have changed over time
+    /// (notably adding a <c>Match</c> column). Slicing records from the header
+    /// offsets is more reliable than splitting on whitespace because a short
+    /// package name is followed by only one padding space.
+    /// </summary>
+    private sealed class SearchTableLayout
+    {
+        private static readonly string[] RequiredColumns = ["Name", "Id", "Version"];
+        private static readonly string[] KnownColumns = ["Name", "Id", "Version", "Match", "Source"];
+
+        private readonly IReadOnlyDictionary<string, int> _starts;
+
+        private SearchTableLayout(IReadOnlyDictionary<string, int> starts) => _starts = starts;
+
+        public static SearchTableLayout? TryCreate(string line)
+        {
+            var starts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            foreach (var column in KnownColumns)
+            {
+                var match = Regex.Match(line, $"(?<!\\S){Regex.Escape(column)}(?!\\S)", RegexOptions.IgnoreCase);
+                if (match.Success) starts[column] = match.Index;
+            }
+
+            if (RequiredColumns.Any(column => !starts.ContainsKey(column))) return null;
+            if (starts["Name"] >= starts["Id"] || starts["Id"] >= starts["Version"]) return null;
+            return new SearchTableLayout(starts);
+        }
+
+        public string ReadColumn(string line, string column)
+        {
+            if (!_starts.TryGetValue(column, out var start) || start >= line.Length) return column == "Source" ? "winget" : string.Empty;
+            var end = _starts.Values.Where(nextStart => nextStart > start).DefaultIfEmpty(line.Length).Min();
+            return line[start..Math.Min(end, line.Length)].Trim();
+        }
     }
 
     private static string EscapeArgument(string input) => input.Replace("\"", string.Empty);

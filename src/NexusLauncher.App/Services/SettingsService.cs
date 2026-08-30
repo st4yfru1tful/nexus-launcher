@@ -5,22 +5,28 @@ namespace NexusLauncher.App.Services;
 
 public sealed class SettingsService
 {
-    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
-    private readonly SemaphoreSlim _gate = new(1, 1);
+    private static readonly SemaphoreSlim Gate = new(1, 1);
+    private readonly string _settingsFile;
+
+    public SettingsService()
+    {
+        NexusPaths.EnsureCreated();
+        _settingsFile = NexusPaths.SettingsFile;
+    }
 
     public async Task<AppSettings> LoadAsync()
     {
         NexusPaths.EnsureCreated();
-        if (!File.Exists(NexusPaths.SettingsFile))
+        if (!File.Exists(_settingsFile))
         {
             return new AppSettings();
         }
 
-        await _gate.WaitAsync();
+        await Gate.WaitAsync();
         try
         {
-            await using var stream = File.OpenRead(NexusPaths.SettingsFile);
-            return await JsonSerializer.DeserializeAsync<AppSettings>(stream, JsonOptions) ?? new AppSettings();
+            await using var stream = File.OpenRead(_settingsFile);
+            return await JsonSerializer.DeserializeAsync<AppSettings>(stream, NexusJsonOptions.Default) ?? new AppSettings();
         }
         catch (JsonException)
         {
@@ -28,27 +34,27 @@ public sealed class SettingsService
         }
         finally
         {
-            _gate.Release();
+            Gate.Release();
         }
     }
 
     public async Task SaveAsync(AppSettings settings)
     {
         NexusPaths.EnsureCreated();
-        await _gate.WaitAsync();
+        await Gate.WaitAsync();
         try
         {
-            var temporary = NexusPaths.SettingsFile + ".tmp";
+            var temporary = _settingsFile + ".tmp";
             await using (var stream = File.Create(temporary))
             {
-                await JsonSerializer.SerializeAsync(stream, settings, JsonOptions);
+                await JsonSerializer.SerializeAsync(stream, settings, NexusJsonOptions.Default);
             }
 
-            File.Move(temporary, NexusPaths.SettingsFile, true);
+            File.Move(temporary, _settingsFile, true);
         }
         finally
         {
-            _gate.Release();
+            Gate.Release();
         }
     }
 }

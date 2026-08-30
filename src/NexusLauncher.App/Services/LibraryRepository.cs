@@ -5,52 +5,58 @@ namespace NexusLauncher.App.Services;
 
 public sealed class LibraryRepository
 {
-    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
-    private readonly SemaphoreSlim _gate = new(1, 1);
+    private static readonly SemaphoreSlim Gate = new(1, 1);
+    private readonly string _libraryFile;
+
+    public LibraryRepository()
+    {
+        NexusPaths.EnsureCreated();
+        _libraryFile = NexusPaths.LibraryFile;
+    }
 
     public async Task<List<LibraryItem>> LoadAsync()
     {
         NexusPaths.EnsureCreated();
-        if (!File.Exists(NexusPaths.LibraryFile))
+        if (!File.Exists(_libraryFile))
         {
             return [];
         }
 
-        await _gate.WaitAsync();
+        await Gate.WaitAsync();
         try
         {
-            await using var stream = File.OpenRead(NexusPaths.LibraryFile);
-            return await JsonSerializer.DeserializeAsync<List<LibraryItem>>(stream, JsonOptions) ?? [];
+            await using var stream = File.OpenRead(_libraryFile);
+            return await JsonSerializer.DeserializeAsync<List<LibraryItem>>(stream, NexusJsonOptions.Default) ?? [];
         }
         catch (JsonException)
         {
-            var corruptedFile = NexusPaths.LibraryFile + ".corrupt-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss");
-            File.Move(NexusPaths.LibraryFile, corruptedFile, true);
+            var corruptedFile = _libraryFile + ".corrupt-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+            File.Move(_libraryFile, corruptedFile, true);
             return [];
         }
         finally
         {
-            _gate.Release();
+            Gate.Release();
         }
     }
 
     public async Task SaveAsync(IEnumerable<LibraryItem> items)
     {
         NexusPaths.EnsureCreated();
-        await _gate.WaitAsync();
+        await Gate.WaitAsync();
         try
         {
-            var temporary = NexusPaths.LibraryFile + ".tmp";
+            var temporary = _libraryFile + ".tmp";
             await using (var stream = File.Create(temporary))
             {
-                await JsonSerializer.SerializeAsync(stream, items.OrderBy(item => item.Name), JsonOptions);
+                await JsonSerializer.SerializeAsync(stream, items.OrderBy(item => item.Name), NexusJsonOptions.Default);
             }
 
-            File.Move(temporary, NexusPaths.LibraryFile, true);
+            File.Move(temporary, _libraryFile, true);
         }
         finally
         {
-            _gate.Release();
+            Gate.Release();
         }
     }
 }

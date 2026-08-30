@@ -6,17 +6,28 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+No unreleased changes yet.
+
+## [0.1.0] - 2026-08-29
+
+Initial public prerelease of Nexus Launcher for Windows.
+
 ### Added
 
-- Repository documentation, Windows CI, security analysis, dependency review, and tag-driven packaging infrastructure.
+- A local-first WPF library with search, category filters, favorites, hide/remove controls, manual `.exe` additions, launch, and open-folder actions.
+- Local Steam-manifest, Windows Registry, and Start menu discovery with duplicate resolution and source-specific scan diagnostics.
+- A transparent WinGet search/install handoff, safe local mod-archive extraction, and opt-in local export/restore backups.
+- A self-contained Windows x64 portable ZIP, Inno Setup installer, SHA-256 checksums, and tag-driven GitHub release workflow.
+- Unit coverage for discovery, Steam VDF parsing, path normalization, duplicate handling, executable classification, and current/legacy WinGet result tables.
 
-### Changed
+### Security and privacy
 
-- Nothing else is recorded as shipped until it has been implemented, tested, and included in a tagged release.
+- The application runs as the current user and has no telemetry, login, bundled credentials, background updater, cloud upload, metadata lookup, or AI request path in this release.
+- Backups are local ZIP files only; restore validates their required JSON documents before replacing live data.
 
-## [0.1.0] - Unreleased
+### Known limitations
 
-The initial prerelease version has not been published yet. Populate this section with verified user-visible behavior immediately before creating the `v0.1.0` GitHub Release.
+- This prerelease does not include Epic, GOG, EA, Ubisoft, Battle.net, Xbox, or itch.io providers; metadata enrichment; connected cloud sync; playtime tracking; automatic updates; or binary code signing.
 
 [Unreleased]: ../../compare/v0.1.0...HEAD
 [0.1.0]: ../../releases/tag/v0.1.0

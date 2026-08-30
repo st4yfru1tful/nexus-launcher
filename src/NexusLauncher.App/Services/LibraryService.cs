@@ -1,34 +1,39 @@
 using System.Diagnostics;
 using NexusLauncher.App.Models;
+using NexusLauncher.Core.Discovery;
 
 namespace NexusLauncher.App.Services;
 
-public sealed class LibraryService(LibraryRepository repository, DiscoveryService discovery, ExecutableInspector inspector)
+public sealed class LibraryService(LibraryRepository repository, DiscoveryService discovery)
 {
     private readonly LibraryRepository _repository = repository;
     private readonly DiscoveryService _discovery = discovery;
-    private readonly ExecutableInspector _inspector = inspector;
 
     public Task<List<LibraryItem>> LoadAsync() => _repository.LoadAsync();
     public Task SaveAsync(IEnumerable<LibraryItem> items) => _repository.SaveAsync(items);
 
-    public LibraryItem CreateManualItem(string executable) => _inspector.CreateFromExecutable(executable, true);
+    public static LibraryItem CreateManualItem(string executable) => ExecutableInspector.CreateFromExecutable(executable, true);
 
     public async Task<ScanResult> ScanAndMergeAsync(IList<LibraryItem> current, AppSettings settings, IProgress<string>? progress = null, CancellationToken cancellationToken = default)
     {
-        var discovered = await _discovery.DiscoverAsync(settings, progress, cancellationToken);
+        var discovery = await _discovery.DiscoverAsync(settings, progress, cancellationToken);
         var existingKeys = new HashSet<string>(current.Select(Identity), StringComparer.OrdinalIgnoreCase);
-        var added = discovered.Where(item => existingKeys.Add(Identity(item))).ToList();
+        // Discovery applies this filter too. Keeping it at the merge boundary makes a
+        // user removal durable even if a future discovery provider omits that filter.
+        var added = discovery.Items
+            .Where(item => !LibrarySuppression.IsSuppressed(settings, item))
+            .Where(item => existingKeys.Add(Identity(item)))
+            .ToList();
         foreach (var item in added)
         {
             current.Add(item);
         }
 
         await SaveAsync(current);
-        return new ScanResult(discovered.Count, added.Count);
+        return new ScanResult(discovery.Items.Count, added.Count, discovery.Issues);
     }
 
-    public async Task LaunchAsync(LibraryItem item)
+    public static Task LaunchAsync(LibraryItem item)
     {
         if (!string.IsNullOrWhiteSpace(item.LaunchUri))
         {
@@ -49,7 +54,7 @@ public sealed class LibraryService(LibraryRepository repository, DiscoveryServic
         }
 
         item.LastPlayed = DateTimeOffset.Now;
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 
     public static void OpenFolder(LibraryItem item)
@@ -71,4 +76,4 @@ public sealed class LibraryService(LibraryRepository repository, DiscoveryServic
         $"{item.Name}|{item.InstallPath}";
 }
 
-public readonly record struct ScanResult(int ItemsFound, int ItemsAdded);
+public readonly record struct ScanResult(int ItemsFound, int ItemsAdded, IReadOnlyList<DiscoveryIssue> Issues);

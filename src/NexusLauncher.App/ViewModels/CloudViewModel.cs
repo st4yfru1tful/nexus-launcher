@@ -8,7 +8,7 @@ namespace NexusLauncher.App.ViewModels;
 public sealed class CloudViewModel : PageViewModel
 {
     private readonly BackupService _backupService;
-    private string _status = "Nexus keeps your library local. Export an encrypted-transport-ready ZIP backup when you want to move it.";
+    private string _status = "Nexus keeps your library local. Export a local ZIP backup when you want to move it.";
 
     public CloudViewModel(BackupService backupService)
         : base("Cloud", "Portable, user-controlled library backups")

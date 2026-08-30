@@ -8,17 +8,15 @@ namespace NexusLauncher.App.ViewModels;
 
 public sealed class StoreViewModel : PageViewModel
 {
-    private readonly WingetStoreService _storeService;
     private string _query = string.Empty;
     private string _status = "Search the WinGet community repository for legitimate software.";
     private bool _isSearching;
     private StorePackage? _selectedPackage;
     private bool _isWingetAvailable;
 
-    public StoreViewModel(WingetStoreService storeService)
+    public StoreViewModel()
         : base("Store", "Discover and install software from verified package sources")
     {
-        _storeService = storeService;
         SearchCommand = new AsyncRelayCommand(SearchAsync, () => !IsSearching && !string.IsNullOrWhiteSpace(Query));
         InstallCommand = new RelayCommand(InstallSelected, () => SelectedPackage is not null && IsWingetAvailable);
     }
@@ -50,7 +48,7 @@ public sealed class StoreViewModel : PageViewModel
 
     public async Task InitializeAsync()
     {
-        IsWingetAvailable = await _storeService.IsAvailableAsync();
+        IsWingetAvailable = await WingetStoreService.IsAvailableAsync();
         Status = IsWingetAvailable
             ? "Search WinGet for legitimate software. Nexus opens WinGet only after you choose Install."
             : "WinGet is not available on this Windows installation. Store search is disabled.";
@@ -62,7 +60,7 @@ public sealed class StoreViewModel : PageViewModel
         Status = $"Searching WinGet for “{Query}”…";
         try
         {
-            var results = await _storeService.SearchAsync(Query);
+            var results = await WingetStoreService.SearchAsync(Query);
             Packages.Clear();
             foreach (var item in results) Packages.Add(item);
             Status = results.Count == 0
@@ -91,7 +89,7 @@ public sealed class StoreViewModel : PageViewModel
         if (confirmation != MessageBoxResult.Yes) return;
         try
         {
-            _storeService.StartInstall(SelectedPackage);
+            WingetStoreService.StartInstall(SelectedPackage);
             Status = $"WinGet installation started for {SelectedPackage.Name}.";
         }
         catch (Exception exception)
