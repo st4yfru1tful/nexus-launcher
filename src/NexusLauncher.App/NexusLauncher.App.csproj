@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <AssemblyName>NexusLauncher</AssemblyName>
+    <RootNamespace>NexusLauncher.App</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\NexusLauncher.Core\NexusLauncher.Core.csproj" />
+    <ProjectReference Include="..\NexusLauncher.Discovery\NexusLauncher.Discovery.csproj" />
+  </ItemGroup>
+</Project>
