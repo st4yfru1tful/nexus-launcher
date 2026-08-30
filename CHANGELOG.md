@@ -8,6 +8,65 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 No unreleased changes yet.
 
+## [1.0.0] - 2026-08-30
+
+### Added
+
+- Optional on-device metadata suggestions using a dedicated, Nexus-owned
+  Ollama child process on a random IPv4 loopback port.
+- Local runtime and model availability checks with clear missing-runtime,
+  missing-local-model, ready, and failure states, including explicit local
+  text-generation capability checks.
+- Structured, bounded local model requests and review-before-apply metadata
+  output using only the existing privacy-minimized one-item contract.
+- Branded window, taskbar, and installer icons, a packaged Nexus logo and
+  ambient artwork, and packaged cover fallbacks for unavailable artwork.
+- Safe propagation and extraction of icons from local executables and shortcut
+  metadata with UNC/network-path rejection and a bounded cache.
+
+### Changed
+
+- Metadata intelligence now offers an on-device path without requiring a
+  hosted Nexus gateway. Nexus Cloud remains a separate, explicitly selected
+  provider and never receives an automatic fallback request.
+- The launcher theme system, responsive spacing, empty states, controls, and
+  navigation iconography were refined for a coherent 1.0 visual system.
+- Release, assembly, packaging, and generated release-note defaults now use
+  version 1.0.0.
+
+### Security and privacy
+
+- Nexus starts Ollama directly without a shell, binds it to a random loopback
+  port, sets `OLLAMA_NO_CLOUD=1`, disables model keep-alive, bypasses proxies
+  for its loopback client, and stops the child process when the provider is
+  disposed.
+- On-device AI uses only an already-downloaded text-generation model, rejects
+  embedding-only and cloud models plus remote endpoints, and does not install
+  Ollama, pull models, browse the web, or expose tools.
+- Closing Nexus cancels active local metadata requests and immediately stops
+  only the isolated Ollama process tree that Nexus started.
+- Both metadata providers send only the selected item's title and optional
+  provider, publisher, version, executable filename, and parent-folder label.
+  Full paths, launch fields, libraries, files, and binaries remain excluded.
+- The public build contains no hosted Nexus Cloud gateway, OpenAI API key, or
+  end-user OpenAI OAuth flow. A configured gateway keeps any model-provider
+  credential on its server.
+- Remote Store artwork and local icon extraction fail into packaged/vector
+  fallbacks instead of producing missing-image states.
+
+### Known limitations
+
+- On-device metadata intelligence requires a separately installed Ollama
+  runtime and at least one already-downloaded local text-generation model.
+  Nexus intentionally does not install either prerequisite.
+- Nexus Cloud requires a separately deployed Nexus identity service and AI
+  gateway; neither service is included with this release.
+- Metadata intelligence suggests metadata for one selected item. Semantic
+  library search, automatic background enrichment, and AI store ranking are
+  not included.
+- Epic, GOG, EA, Ubisoft, Battle.net, Xbox, and itch.io discovery; cloud sync;
+  an automatic updater; and binary code signing are not included.
+
 ## [0.2.0] - 2026-08-29
 
 ### Added
@@ -69,7 +128,8 @@ Initial public prerelease of Nexus Launcher for Windows.
 
 - This prerelease does not include Epic, GOG, EA, Ubisoft, Battle.net, Xbox, or itch.io providers; metadata enrichment; connected cloud sync; playtime tracking; automatic updates; or binary code signing.
 
-[Unreleased]: ../../compare/v0.2.0...HEAD
+[Unreleased]: ../../compare/v1.0.0...HEAD
+[1.0.0]: ../../compare/v0.2.0...v1.0.0
 [0.2.0]: ../../compare/v0.1.1...v0.2.0
 [0.1.1]: ../../compare/v0.1.0...v0.1.1
 [0.1.0]: ../../releases/tag/v0.1.0

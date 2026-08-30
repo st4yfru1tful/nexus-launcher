@@ -8,9 +8,11 @@ OAuth client secret. Its OAuth implementation is for a **developer-owned Nexus
 AI gateway** that can apply user consent, quotas, abuse controls, and a
 server-side model integration.
 
-The public v0.2.0 build contains the desktop client only. It does not ship a
-Nexus identity service or gateway, so AI stays unavailable until a maintainer
-deploys those services.
+The public v1.0.0 build contains the Nexus Cloud desktop client only. It does
+not ship a Nexus identity service or gateway, so the **Nexus Cloud** provider
+stays unavailable until a maintainer deploys those services. This is separate
+from the optional on-device provider described in [LOCAL-AI.md](LOCAL-AI.md).
+Nexus never silently falls back between these providers.
 
 ## Desktop configuration
 
@@ -98,9 +100,11 @@ federation where it is available and appropriate, or a server-side secret
 manager for any other supported credential. Never distribute a model-provider
 credential in Nexus or ask an end user to paste one into the launcher.
 
-## Out of scope in v0.2.0
+## Out of scope in v1.0.0
 
-This release does not deploy a gateway, semantic library search, automatic
-classification, AI store ranking, background enrichment, or a metadata cache.
-Those features require their own privacy controls, reviewable behavior,
-response contracts, test coverage, and release notes.
+This release does not deploy a gateway, identity service, semantic library
+search, automatic classification, AI store ranking, background enrichment, or
+a metadata cache. Those features require their own privacy controls, reviewable
+behavior, response contracts, test coverage, and release notes. The on-device
+provider is not a substitute identity service and never supplies cloud OAuth
+credentials.

@@ -5,6 +5,8 @@ public enum AiGatewayLookupStatus
     Success,
     NotConfigured,
     NotConnected,
+    LocalRuntimeUnavailable,
+    LocalModelUnavailable,
     RequestRejected,
     RateLimited,
     Unavailable,

@@ -26,10 +26,27 @@ public sealed class CollectionsViewModel : PageViewModel
 
     public IReadOnlyList<string> Collections { get; } = ["Favorites", "Recently Played", "Never Played", "Steam", "Manual Additions"];
     public ICollectionView Items { get; }
+    public bool HasItems => !Items.IsEmpty;
+    public string EmptyStateTitle => $"No {SelectedCollection.ToLowerInvariant()} yet";
+    public string EmptyStateText => SelectedCollection switch
+    {
+        "Favorites" => "Mark a library item as a favorite and it will appear here.",
+        "Recently Played" => "Launch an item through Nexus and it will appear in this view.",
+        "Never Played" => "Everything visible in your library has already been launched through Nexus.",
+        "Steam" => "No visible Steam titles match this local view. Try rescanning your library.",
+        "Manual Additions" => "Executables you add manually will appear here.",
+        _ => "No visible library items match this collection."
+    };
     public string SelectedCollection
     {
         get => _selectedCollection;
-        set { if (SetProperty(ref _selectedCollection, value)) Items.Refresh(); }
+        set
+        {
+            if (!SetProperty(ref _selectedCollection, value)) return;
+            RefreshItems();
+            OnPropertyChanged(nameof(EmptyStateTitle));
+            OnPropertyChanged(nameof(EmptyStateText));
+        }
     }
 
     private bool Filter(object value)
@@ -56,8 +73,14 @@ public sealed class CollectionsViewModel : PageViewModel
         {
             foreach (LibraryItem item in e.NewItems) item.PropertyChanged += OnItemPropertyChanged;
         }
-        Items.Refresh();
+        RefreshItems();
     }
 
-    private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e) => Items.Refresh();
+    private void OnItemPropertyChanged(object? sender, PropertyChangedEventArgs e) => RefreshItems();
+
+    private void RefreshItems()
+    {
+        Items.Refresh();
+        OnPropertyChanged(nameof(HasItems));
+    }
 }

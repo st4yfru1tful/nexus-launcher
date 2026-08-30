@@ -119,6 +119,7 @@ public sealed class RegistryInstalledApplicationsDiscoveryProvider : IInstallati
                 ? LibraryItemCategory.Application
                 : classification.Category,
             InstallPath = installPath,
+            IconPath = IconPathNormalizer.TryNormalize(executablePath, out var iconPath) ? iconPath : null,
             Publisher = values.GetString("Publisher"),
             Version = values.GetString("DisplayVersion") ?? metadata.FileVersion,
             ProviderId = Id,

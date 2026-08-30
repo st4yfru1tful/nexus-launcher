@@ -9,10 +9,13 @@ namespace NexusLauncher.App.ViewModels;
 
 public sealed class SettingsViewModel : PageViewModel
 {
+    public sealed record AiProviderChoice(AiProviderMode Mode, string Name, string Summary);
+
     private readonly SettingsService _settingsService;
     private readonly AppSettings _settings;
     private readonly Action<AppTheme> _applyTheme;
     private readonly NexusAiGatewayOAuthClient _aiOAuthClient;
+    private readonly IAiMetadataProvider _aiProvider;
     private readonly Action? _onAiSettingsChanged;
     private readonly string _dataStorageDescription = NexusPaths.IsPortableMode
         ? "Portable mode is active. Your library, settings, cache, and diagnostics stay in NexusLauncherData next to this copy of Nexus."
@@ -21,38 +24,61 @@ public sealed class SettingsViewModel : PageViewModel
     private string _aiConnectionStatus = "Checking Nexus AI availability…";
     private bool _isAiConnected;
 
-    public SettingsViewModel(SettingsService settingsService, AppSettings settings, Action<AppTheme> applyTheme)
-        : this(settingsService, settings, applyTheme, null, null)
-    {
-    }
-
     public SettingsViewModel(
         SettingsService settingsService,
         AppSettings settings,
         Action<AppTheme> applyTheme,
-        NexusAiGatewayOAuthClient? aiOAuthClient,
+        NexusAiGatewayOAuthClient aiOAuthClient,
+        IAiMetadataProvider aiProvider,
         Action? onAiSettingsChanged)
         : base("Settings", "Control what Nexus scans and what it keeps local")
     {
         _settingsService = settingsService;
         _settings = settings;
         _applyTheme = applyTheme;
-        _aiOAuthClient = aiOAuthClient ?? new NexusAiGatewayOAuthClient();
+        _aiOAuthClient = aiOAuthClient ?? throw new ArgumentNullException(nameof(aiOAuthClient));
+        _aiProvider = aiProvider ?? throw new ArgumentNullException(nameof(aiProvider));
         _onAiSettingsChanged = onAiSettingsChanged;
         SaveCommand = new AsyncRelayCommand(SaveAsync);
         OpenDataCommand = new RelayCommand(OpenDataFolder);
         AddScanFolderCommand = new RelayCommand(AddScanFolder);
         RemoveScanFolderCommand = new AsyncRelayCommand(RemoveScanFolderAsync, () => SelectedScanFolder is not null);
-        ConnectAiCommand = new AsyncRelayCommand(ConnectAiAsync, () => IsAiGatewayConfigured && !IsAiConnected);
-        DisconnectAiCommand = new AsyncRelayCommand(DisconnectAiAsync, () => IsAiGatewayConfigured && IsAiConnected);
+        ConnectAiCommand = new AsyncRelayCommand(ConnectAiAsync, () => IsCloudAiProvider && IsAiGatewayConfigured && !IsAiConnected);
+        DisconnectAiCommand = new AsyncRelayCommand(DisconnectAiAsync, () => IsCloudAiProvider && IsAiGatewayConfigured && IsAiConnected);
+        RefreshAiStatusCommand = new AsyncRelayCommand(RefreshAiConnectionStateAsync);
+        OpenLocalAiSetupCommand = new RelayCommand(OpenLocalAiSetup);
     }
 
     public IReadOnlyList<AppTheme> Themes { get; } = Enum.GetValues<AppTheme>();
+    public IReadOnlyList<AiProviderChoice> AiProviders { get; } =
+    [
+        new(AiProviderMode.OnDevice, "On-device AI", "Private processing with a downloaded Ollama text-generation model"),
+        new(AiProviderMode.NexusCloud, "Nexus Cloud", "Optional OAuth gateway when a trusted Nexus service is configured")
+    ];
     public IReadOnlyList<int> AiRequestLimits { get; } = [10, 25, 50, 100];
     public List<string> ScanFolders => _settings.ScanFolders;
     public string DataStorageDescription => _dataStorageDescription;
     public bool IsAiGatewayConfigured => _aiOAuthClient.IsConfigured;
     public string AiConnectionStatus { get => _aiConnectionStatus; private set => SetProperty(ref _aiConnectionStatus, value); }
+    public AiProviderChoice SelectedAiProvider
+    {
+        get => AiProviders.FirstOrDefault(choice => choice.Mode == _settings.AiProvider) ?? AiProviders[0];
+        set
+        {
+            if (value is null || _settings.AiProvider == value.Mode) return;
+            _settings.AiProvider = value.Mode;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(IsLocalAiProvider));
+            OnPropertyChanged(nameof(IsCloudAiProvider));
+            OnPropertyChanged(nameof(AiUsageDescription));
+            RefreshAiCommands();
+            _onAiSettingsChanged?.Invoke();
+            Status = $"Selected {value.Name}. Save settings to keep this choice.";
+            RefreshAiStatusCommand.Execute(null);
+        }
+    }
+    public bool IsLocalAiProvider => _settings.AiProvider == AiProviderMode.OnDevice;
+    public bool IsCloudAiProvider => _settings.AiProvider == AiProviderMode.NexusCloud;
     public bool IsAiConnected
     {
         get => _isAiConnected;
@@ -63,7 +89,9 @@ public sealed class SettingsViewModel : PageViewModel
             DisconnectAiCommand.RaiseCanExecuteChanged();
         }
     }
-    public string AiUsageDescription => $"{_settings.AiRequestsThisMonth} of {_settings.AiMonthlyRequestLimit} local AI requests used this month.";
+    public string AiUsageDescription => IsLocalAiProvider
+        ? "On-device requests stay on this PC and have no Nexus quota."
+        : $"{_settings.AiRequestsThisMonth} of {_settings.AiMonthlyRequestLimit} Nexus Cloud requests used this month.";
     private string? _selectedScanFolder;
     public string? SelectedScanFolder { get => _selectedScanFolder; set { if (SetProperty(ref _selectedScanFolder, value)) RemoveScanFolderCommand.RaiseCanExecuteChanged(); } }
     public bool IncludeInstalledApplications { get => _settings.IncludeInstalledApplications; set { _settings.IncludeInstalledApplications = value; OnPropertyChanged(); } }
@@ -78,8 +106,9 @@ public sealed class SettingsViewModel : PageViewModel
             OnPropertyChanged();
             _onAiSettingsChanged?.Invoke();
             Status = value
-                ? "AI metadata suggestions are enabled locally. Nexus will wait for an explicit request and a secure Nexus AI connection."
-                : "AI metadata suggestions are disabled. Nexus will not send metadata to the AI gateway.";
+                ? "Metadata intelligence is enabled. Nexus still waits for you to request and approve each suggestion."
+                : "Metadata intelligence is disabled. No AI provider will receive a request.";
+            RefreshAiStatusCommand.Execute(null);
         }
     }
     public int AiMonthlyRequestLimit
@@ -110,6 +139,8 @@ public sealed class SettingsViewModel : PageViewModel
     public AsyncRelayCommand SaveCommand { get; }
     public AsyncRelayCommand ConnectAiCommand { get; }
     public AsyncRelayCommand DisconnectAiCommand { get; }
+    public AsyncRelayCommand RefreshAiStatusCommand { get; }
+    public RelayCommand OpenLocalAiSetupCommand { get; }
 
     public async Task InitializeAsync()
     {
@@ -151,6 +182,19 @@ public sealed class SettingsViewModel : PageViewModel
         Process.Start(new ProcessStartInfo(NexusPaths.Root) { UseShellExecute = true });
     }
 
+    private void OpenLocalAiSetup()
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("https://ollama.com/download/windows") { UseShellExecute = true });
+            Status = "Opened the official Ollama for Windows setup page.";
+        }
+        catch (Exception exception) when (exception is InvalidOperationException or System.ComponentModel.Win32Exception)
+        {
+            Status = "The Ollama setup page could not be opened. Visit ollama.com/download/windows in your browser.";
+        }
+    }
+
     private async Task ConnectAiAsync()
     {
         try
@@ -186,24 +230,42 @@ public sealed class SettingsViewModel : PageViewModel
 
     private async Task RefreshAiConnectionStateAsync()
     {
-        if (!IsAiGatewayConfigured)
+        if (!_settings.EnableAiMetadata)
         {
             IsAiConnected = false;
-            AiConnectionStatus = _aiOAuthClient.AvailabilityMessage;
+            AiConnectionStatus = IsLocalAiProvider
+                ? "On-device AI support is included. Enable metadata intelligence to check for an installed Ollama runtime and compatible text-generation model."
+                : "Nexus Cloud is optional. Enable metadata intelligence to check its connection without sending library metadata.";
             return;
         }
 
         try
         {
-            IsAiConnected = await _aiOAuthClient.HasSessionAsync();
-            AiConnectionStatus = IsAiConnected
-                ? "A usable Nexus AI session is ready for this Windows user."
-                : "Nexus AI is configured but not connected. Sign in before requesting suggestions.";
+            var availability = await _aiProvider.GetAvailabilityAsync();
+            IsAiConnected = availability.IsReady;
+            AiConnectionStatus = availability.State switch
+            {
+                AiMetadataProviderState.RuntimeUnavailable when IsLocalAiProvider =>
+                    "On-device AI is built in, but Ollama for Windows was not found. Install it from the official page, then refresh.",
+                AiMetadataProviderState.NoLocalModel when IsLocalAiProvider =>
+                    "Ollama is available, but no downloaded text-generation model is ready. Embedding-only and cloud models are not used, and Nexus never downloads models automatically.",
+                _ => availability.Message
+            };
         }
         catch (Exception)
         {
             IsAiConnected = false;
-            AiConnectionStatus = "Nexus AI session status could not be read. It remains disconnected until you sign in again.";
+            AiConnectionStatus = IsLocalAiProvider
+                ? "On-device AI status could not be checked. No library metadata left this PC."
+                : "Nexus Cloud status could not be checked. No library metadata was sent.";
         }
+
+        RefreshAiCommands();
+    }
+
+    private void RefreshAiCommands()
+    {
+        ConnectAiCommand.RaiseCanExecuteChanged();
+        DisconnectAiCommand.RaiseCanExecuteChanged();
     }
 }

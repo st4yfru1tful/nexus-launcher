@@ -28,7 +28,22 @@ implementation, a clear failure state, and accurate documentation.
 - [x] Documentation of the precise Store/AI boundaries and no direct OpenAI
   OAuth/API-key client claim.
 
-## Next — complete connected AI deliberately
+## 1.0 — stable local-launcher baseline
+
+- [x] Packaged Nexus window, taskbar, and installer icons plus branded ambient
+  and cover fallback artwork.
+- [x] Safe local executable/shortcut icon propagation and extraction with UNC
+  rejection, bounded caching, and a visible fallback when no icon is available.
+- [x] On-device, review-before-apply metadata suggestions through a dedicated
+  no-cloud Ollama child process and already-downloaded local models.
+- [x] Explicit provider boundaries: on-device AI never silently falls back to
+  Nexus Cloud, and the public build does not imply a hosted gateway.
+- [x] Dark/light theme token, empty-state, focus, layout, and visual hierarchy
+  hardening for the documented 1.0 screens.
+- [x] Stable semantic-version, packaging, checksum, installer, and portable
+  release defaults for 1.0.0.
+
+## Next — expand deliberately
 
 - [ ] Deploy a maintainer-controlled Nexus identity service and AI gateway,
   with consent, privacy notice, quotas, rate limits, abuse controls, and
@@ -37,6 +52,8 @@ implementation, a clear failure state, and accurate documentation.
   controls once a production gateway exists.
 - [ ] Add AI-assisted library/search intent only after defining a minimal
   request contract, transparent result provenance, and explicit opt-in.
+- [ ] Add model choice/download guidance without making Nexus silently install
+  a runtime, fetch a model, or enable a cloud model.
 - [ ] Let users review/edit metadata and add custom collections, install-size
   calculation, and durable playtime tracking.
 - [ ] Accessibility pass: keyboard navigation, visible focus, screen-reader

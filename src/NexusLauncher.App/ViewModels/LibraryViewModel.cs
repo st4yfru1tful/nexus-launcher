@@ -68,23 +68,39 @@ public sealed class LibraryViewModel : PageViewModel
     public string SearchText
     {
         get => _searchText;
-        set { if (SetProperty(ref _searchText, value)) Items.Refresh(); }
+        set
+        {
+            if (!SetProperty(ref _searchText, value)) return;
+            Items.Refresh();
+            OnPropertyChanged(nameof(HasVisibleItems));
+        }
     }
 
     public string SelectedCategory
     {
         get => _selectedCategory;
-        set { if (SetProperty(ref _selectedCategory, value)) Items.Refresh(); }
+        set
+        {
+            if (!SetProperty(ref _selectedCategory, value)) return;
+            Items.Refresh();
+            OnPropertyChanged(nameof(HasVisibleItems));
+        }
     }
 
     public bool ShowHidden
     {
         get => _showHidden;
-        set { if (SetProperty(ref _showHidden, value)) Items.Refresh(); }
+        set
+        {
+            if (!SetProperty(ref _showHidden, value)) return;
+            Items.Refresh();
+            OnPropertyChanged(nameof(HasVisibleItems));
+        }
     }
 
     public bool IsBusy { get => _isBusy; set => SetProperty(ref _isBusy, value); }
     public string Status { get => _status; set => SetProperty(ref _status, value); }
+    public bool HasVisibleItems => !Items.IsEmpty;
     public LibraryItem? SelectedItem
     {
         get => _selectedItem;
@@ -176,17 +192,27 @@ public sealed class LibraryViewModel : PageViewModel
     private async Task ToggleFavorite()
     {
         if (SelectedItem is null) return;
-        SelectedItem.IsFavorite = !SelectedItem.IsFavorite;
+        var item = SelectedItem;
+        item.IsFavorite = !item.IsFavorite;
         Items.Refresh();
+        OnPropertyChanged(nameof(HasVisibleItems));
         await _libraryService.SaveAsync(_library);
+        Status = item.IsFavorite
+            ? $"Added {item.Name} to favorites."
+            : $"Removed {item.Name} from favorites.";
     }
 
     private async Task HideSelected()
     {
         if (SelectedItem is null) return;
-        SelectedItem.IsHidden = !SelectedItem.IsHidden;
+        var item = SelectedItem;
+        item.IsHidden = !item.IsHidden;
         await _libraryService.SaveAsync(_library);
         Items.Refresh();
+        OnPropertyChanged(nameof(HasVisibleItems));
+        Status = item.IsHidden
+            ? $"Hid {item.Name} from the default library view."
+            : $"Made {item.Name} visible in the library.";
     }
 
     private async Task RemoveSelected()
@@ -228,11 +254,14 @@ public sealed class LibraryViewModel : PageViewModel
             if (tags.Count > 0) preview.Add($"Tags: {string.Join(", ", tags)}");
             if (suggestion.Confidence is { } confidence) preview.Add($"Match confidence: {confidence:P0}");
 
+            var privacyDisclosure = outcome.IsOnDevice
+                ? $"{outcome.ProviderName} processed a minimized metadata request on this PC. Ollama cloud access is disabled for the Nexus-owned process, and no metadata fields were sent to an online AI service."
+                : $"Nexus sent only the item title, provider, publisher, version, executable filename, and parent-folder name to {outcome.ProviderName}. No files, full paths, launch arguments, or library contents were sent.";
             var confirmation = MessageBox.Show(
-                "Nexus sent only the item title, provider, publisher, version, executable filename, and parent-folder name to the connected Nexus AI service. No files, full paths, launch arguments, or library contents were sent.\n\n" +
+                privacyDisclosure + "\n\n" +
                 string.Join("\n", preview) +
                 "\n\nApply this by filling an empty description and adding new tags? Nexus will not change how the item launches.",
-                "Review AI metadata",
+                "Review metadata suggestion",
                 MessageBoxButton.YesNo,
                 MessageBoxImage.Question);
             if (confirmation != MessageBoxResult.Yes)
@@ -277,5 +306,6 @@ public sealed class LibraryViewModel : PageViewModel
     {
         OnPropertyChanged(nameof(Items));
         Items.Refresh();
+        OnPropertyChanged(nameof(HasVisibleItems));
     }
 }

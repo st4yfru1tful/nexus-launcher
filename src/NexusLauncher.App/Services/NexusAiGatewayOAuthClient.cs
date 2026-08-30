@@ -45,8 +45,8 @@ public sealed class NexusAiGatewayOAuthClient : INexusAiGatewaySession
     public bool IsConfigured => _configuration is not null;
     public Uri? GatewayUrl => _configuration?.GatewayUrl;
     public string AvailabilityMessage => IsConfigured
-        ? "Nexus AI is ready to connect."
-        : "Nexus AI is not configured in this build. Local library features remain available.";
+        ? "Nexus Cloud is ready to connect."
+        : "Nexus Cloud is not configured. On-device metadata intelligence remains available.";
 
     public async Task<bool> HasSessionAsync(CancellationToken cancellationToken = default)
     {
@@ -73,7 +73,7 @@ public sealed class NexusAiGatewayOAuthClient : INexusAiGatewaySession
     {
         if (_configuration is null)
         {
-            return NexusAiOAuthConnectionResult.Failure("Nexus AI is not configured in this build, so there is no service to sign in to.");
+            return NexusAiOAuthConnectionResult.Failure("Nexus Cloud is not configured, so there is no cloud service to sign in to. On-device AI remains available.");
         }
 
         HttpListener? listener = null;

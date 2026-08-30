@@ -12,7 +12,7 @@ namespace NexusLauncher.App.Services;
 /// sends only the request produced by <see cref="AiMetadataRequestFactory"/>,
 /// and never communicates directly with the OpenAI API.
 /// </summary>
-public sealed class NexusAiGatewayClient
+public sealed class NexusAiGatewayClient : IAiMetadataProvider
 {
     private const int MaximumResponseBytes = 128 * 1024;
     private static readonly HttpClient SharedHttpClient = CreateHttpClient();
@@ -27,6 +27,41 @@ public sealed class NexusAiGatewayClient
     }
 
     public bool IsConfigured => _session.IsConfigured && _session.GatewayUrl is not null;
+    public string ProviderId => "nexus-cloud";
+    public string DisplayName => "Nexus Cloud";
+    public bool IsOnDevice => false;
+
+    public async Task<AiMetadataProviderAvailability> GetAvailabilityAsync(CancellationToken cancellationToken = default)
+    {
+        if (!IsConfigured)
+        {
+            return new AiMetadataProviderAvailability(
+                AiMetadataProviderState.Unavailable,
+                "Nexus Cloud is not configured. On-device AI remains available as a separate provider.");
+        }
+
+        try
+        {
+            var token = await _session.GetAccessTokenAsync(cancellationToken);
+            return string.IsNullOrWhiteSpace(token)
+                ? new AiMetadataProviderAvailability(
+                    AiMetadataProviderState.Unavailable,
+                    "Nexus Cloud is configured but not connected. Sign in before requesting suggestions.")
+                : new AiMetadataProviderAvailability(
+                    AiMetadataProviderState.Ready,
+                    "Nexus Cloud is connected.");
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or IOException or InvalidOperationException)
+        {
+            return new AiMetadataProviderAvailability(
+                AiMetadataProviderState.Unavailable,
+                "Nexus Cloud connection status could not be verified.");
+        }
+    }
 
     public async Task<AiGatewayLookupResponse> LookupMetadataAsync(
         AiMetadataLookupRequest request,

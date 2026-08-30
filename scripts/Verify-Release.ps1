@@ -7,6 +7,12 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
+# Windows PowerShell 5.1 does not automatically load the assembly that exposes
+# ZipFile. Load it explicitly while remaining a no-op on modern PowerShell.
+if (-not ('System.IO.Compression.ZipFile' -as [type])) {
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+}
+
 $directory = (Resolve-Path -LiteralPath $ArtifactsDirectory).Path
 $required = @(
     'NexusLauncher-Setup-x64.exe',
@@ -58,6 +64,12 @@ try {
 
     if (-not ($archiveEntries.FullName -contains 'NexusLauncher.portable')) {
         throw 'The portable archive does not contain the NexusLauncher.portable mode marker.'
+    }
+
+    foreach ($notice in @('LICENSE.txt', 'THIRD-PARTY-NOTICES.txt')) {
+        if (-not ($archiveEntries.FullName -contains $notice)) {
+            throw "The portable archive does not contain $notice at its root."
+        }
     }
 }
 finally {

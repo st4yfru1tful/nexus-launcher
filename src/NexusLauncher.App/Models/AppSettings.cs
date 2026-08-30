@@ -7,6 +7,12 @@ public enum AppTheme
     System
 }
 
+public enum AiProviderMode
+{
+    OnDevice,
+    NexusCloud
+}
+
 public sealed class AppSettings
 {
     private List<string> _scanFolders = [];
@@ -25,6 +31,11 @@ public sealed class AppSettings
     /// never stores a token or an OpenAI credential in settings.json.
     /// </summary>
     public bool EnableAiMetadata { get; set; }
+    /// <summary>
+    /// Selects one explicit provider. Nexus never falls back from on-device AI
+    /// to a network service, or vice versa, without the user changing this.
+    /// </summary>
+    public AiProviderMode AiProvider { get; set; } = AiProviderMode.OnDevice;
     public int AiMonthlyRequestLimit
     {
         get => _aiMonthlyRequestLimit;

@@ -27,6 +27,8 @@ public sealed class HomeViewModel : PageViewModel
     public int GameCount => _library.Count(item => item.Category == LibraryCategory.Game && !item.IsHidden);
     public int AppCount => _library.Count(item => item.Category != LibraryCategory.Game && !item.IsHidden);
     public int FavoriteCount => _library.Count(item => item.IsFavorite && !item.IsHidden);
+    public bool HasRecentItems => ContinuePlaying.Any();
+    public bool HasFavorites => Favorites.Any();
     public string ScanStatus { get => _scanStatus; set => SetProperty(ref _scanStatus, value); }
 
     public void Refresh()
@@ -36,6 +38,8 @@ public sealed class HomeViewModel : PageViewModel
         OnPropertyChanged(nameof(GameCount));
         OnPropertyChanged(nameof(AppCount));
         OnPropertyChanged(nameof(FavoriteCount));
+        OnPropertyChanged(nameof(HasRecentItems));
+        OnPropertyChanged(nameof(HasFavorites));
     }
 
     private void OnLibraryChanged(object? sender, NotifyCollectionChangedEventArgs e)

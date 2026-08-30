@@ -10,7 +10,7 @@ using NexusLauncher.App.Services;
 
 namespace NexusLauncher.App.ViewModels;
 
-public sealed class ShellViewModel : ObservableObject
+public sealed class ShellViewModel : ObservableObject, IAsyncDisposable
 {
     private readonly SettingsService _settingsService = new();
     private readonly LibraryRepository _libraryRepository = new();
@@ -24,6 +24,8 @@ public sealed class ShellViewModel : ObservableObject
     private readonly CloudViewModel _cloud;
     private readonly SettingsViewModel _settingsPage;
     private readonly InfoPageViewModel _downloads;
+    private readonly OllamaLocalMetadataProvider _localAiProvider;
+    private readonly AiMetadataProviderRouter _aiProviderRouter;
     private object? _currentPage;
     private NavigationItem? _selectedNavigation;
     private string _globalStatus = "Starting Nexus…";
@@ -38,10 +40,15 @@ public sealed class ShellViewModel : ObservableObject
         var discovery = new DiscoveryService(_inspector);
         var libraryService = new LibraryService(_libraryRepository, discovery);
         var aiOAuthClient = new NexusAiGatewayOAuthClient();
+        _localAiProvider = new OllamaLocalMetadataProvider();
+        _aiProviderRouter = new AiMetadataProviderRouter(
+            _settings,
+            _localAiProvider,
+            new NexusAiGatewayClient(aiOAuthClient));
         var aiMetadataCoordinator = new AiMetadataCoordinator(
             _settings,
             _settingsService,
-            new NexusAiGatewayClient(aiOAuthClient));
+            _aiProviderRouter);
         LibraryItems = [];
         _home = new HomeViewModel(LibraryItems);
         _library = new LibraryViewModel(LibraryItems, libraryService, _settings, _settingsService, aiMetadataCoordinator);
@@ -49,14 +56,20 @@ public sealed class ShellViewModel : ObservableObject
         _mods = new ModsViewModel(LibraryItems);
         _collections = new CollectionsViewModel(LibraryItems);
         _cloud = new CloudViewModel(new BackupService());
-        _settingsPage = new SettingsViewModel(_settingsService, _settings, ApplyTheme, aiOAuthClient, _library.RefreshAiAvailability);
+        _settingsPage = new SettingsViewModel(
+            _settingsService,
+            _settings,
+            ApplyTheme,
+            aiOAuthClient,
+            _aiProviderRouter,
+            _library.RefreshAiAvailability);
         aiMetadataCoordinator.UsageChanged += _settingsPage.RefreshAiUsage;
         _downloads = new InfoPageViewModel(
             "Downloads",
             "Installation and update activity stays with its trusted source",
             "Nexus does not silently run downloads",
             "When you choose Install in Store, Nexus starts Windows Package Manager in its own visible window. Use the Library rescan after it finishes to find the new application. Game results open the official Steam page; Steam remains responsible for accounts, ownership, age checks, and downloads.",
-            "↓");
+            "\uE896");
 
         ScanCommand = new AsyncRelayCommand(ScanAsync, () => !IsScanning);
         OpenCommandPaletteCommand = new RelayCommand(OpenCommandPalette);
@@ -79,16 +92,16 @@ public sealed class ShellViewModel : ObservableObject
 
         Navigation =
         [
-            new NavigationItem("Home", "⌂", _home),
-            new NavigationItem("Library", "▦", _library),
-            new NavigationItem("Games", "◈", _library),
-            new NavigationItem("Applications", "▣", _library),
-            new NavigationItem("Store", "⌕", _store),
-            new NavigationItem("Mods", "◇", _mods),
-            new NavigationItem("Downloads", "↓", _downloads),
-            new NavigationItem("Collections", "♡", _collections),
-            new NavigationItem("Cloud", "☁", _cloud),
-            new NavigationItem("Settings", "⚙", _settingsPage)
+            new NavigationItem("Home", "\uE80F", _home),
+            new NavigationItem("Library", "\uE8F1", _library),
+            new NavigationItem("Games", "\uE7FC", _library),
+            new NavigationItem("Applications", "\uE71D", _library),
+            new NavigationItem("Store", "\uE719", _store),
+            new NavigationItem("Mods", "\uE74C", _mods),
+            new NavigationItem("Downloads", "\uE896", _downloads),
+            new NavigationItem("Collections", "\uE734", _collections),
+            new NavigationItem("Cloud", "\uE753", _cloud),
+            new NavigationItem("Settings", "\uE713", _settingsPage)
         ];
         SelectedNavigation = Navigation[0];
     }
@@ -141,15 +154,21 @@ public sealed class ShellViewModel : ObservableObject
             {
                 OnPropertyChanged(nameof(OnboardingTitle));
                 OnPropertyChanged(nameof(OnboardingBody));
+                OnPropertyChanged(nameof(CanGoBack));
+                OnPropertyChanged(nameof(CanGoNext));
+                OnPropertyChanged(nameof(CanFinishOnboarding));
             }
         }
     }
+    public bool CanGoBack => OnboardingStep > 1;
+    public bool CanGoNext => OnboardingStep < 3;
+    public bool CanFinishOnboarding => OnboardingStep == 3;
     public string OnboardingTitle => OnboardingStep switch { 1 => "Welcome to Nexus", 2 => "Find your games and apps", _ => "Your library stays yours" };
     public string OnboardingBody => OnboardingStep switch
     {
         1 => "Nexus is local-first. It never needs an account to catalog or launch what is already on this PC.",
         2 => "Nexus can look at Steam manifests, registered Windows applications, and Start menu shortcuts. It does not crawl every drive or upload executable files.",
-        _ => "Store searches either hand off to Steam or start Windows Package Manager after you explicitly choose an action. Cloud backup stays local, and optional AI features require a secure Nexus AI connection."
+        _ => "Store searches either hand off to Steam or start Windows Package Manager after you explicitly choose an action. Backups stay local. Optional metadata intelligence can run on-device, or use Nexus Cloud only when you select and connect it."
     };
 
     public async Task InitializeAsync()
@@ -173,6 +192,14 @@ public sealed class ShellViewModel : ObservableObject
     {
         var navigation = Navigation.FirstOrDefault(item => item.Title == name);
         if (navigation is not null) SelectedNavigation = navigation;
+    }
+
+    public void BeginShutdown() => _localAiProvider.BeginShutdown();
+
+    public async ValueTask DisposeAsync()
+    {
+        BeginShutdown();
+        await _localAiProvider.DisposeAsync().ConfigureAwait(false);
     }
 
     private async Task ScanAsync()
@@ -226,6 +253,7 @@ public sealed class ShellViewModel : ObservableObject
 
     private void OpenCommandPalette()
     {
+        if (IsOnboardingOpen) return;
         CommandQuery = string.Empty;
         IsCommandPaletteOpen = true;
     }
@@ -246,6 +274,7 @@ public sealed class ShellViewModel : ObservableObject
         target.IncludeInstalledApplications = source.IncludeInstalledApplications;
         target.IncludeStartMenuShortcuts = source.IncludeStartMenuShortcuts;
         target.EnableAiMetadata = source.EnableAiMetadata;
+        target.AiProvider = Enum.IsDefined(source.AiProvider) ? source.AiProvider : AiProviderMode.OnDevice;
         target.AiMonthlyRequestLimit = source.AiMonthlyRequestLimit;
         target.AiUsageMonth = source.AiUsageMonth;
         target.AiRequestsThisMonth = source.AiRequestsThisMonth;
@@ -270,12 +299,26 @@ public sealed class ShellViewModel : ObservableObject
             AppTheme.System => UsesSystemDarkTheme(),
             _ => true
         };
-        SetBrush("NexusBackground", dark ? "#10131C" : "#F4F6FA");
-        SetBrush("NexusPanel", dark ? "#181D29" : "#FFFFFF");
+        SetBrush("NexusBackground", dark ? "#0D111A" : "#F4F6FA");
+        SetBrush("NexusPanel", dark ? "#171C28" : "#FFFFFF");
         SetBrush("NexusPanelRaised", dark ? "#202737" : "#E8EDF7");
         SetBrush("NexusText", dark ? "#F7F9FC" : "#172033");
-        SetBrush("NexusMutedText", dark ? "#A4AEC2" : "#57657B");
-        SetBrush("NexusAccent", "#7B6CFF");
+        SetBrush("NexusMutedText", dark ? "#A9B4C8" : "#536176");
+        SetBrush("NexusAccent", "#8A7CFF");
+        SetBrush("NexusAccentHover", "#A69CFF");
+        SetBrush("NexusAccentText", dark ? "#A69CFF" : "#5B4BC5");
+        SetBrush("NexusFocus", dark ? "#F7F9FC" : "#172033");
+        SetBrush("NexusInput", dark ? "#111722" : "#FFFFFF");
+        SetBrush("NexusBorder", dark ? "#354057" : "#C4CDDB");
+        SetBrush("NexusBorderStrong", dark ? "#526583" : "#909CB0");
+        SetBrush("NexusHover", dark ? "#222B3D" : "#E9EEF7");
+        SetBrush("NexusSelected", dark ? "#332C52" : "#E6E2FF");
+        SetBrush("NexusOnAccent", "#0B0E18");
+        SetBrush("NexusDangerSurface", dark ? "#3A1C29" : "#FDEBF0");
+        SetBrush("NexusDangerBorder", dark ? "#98566E" : "#C66D89");
+        SetBrush("NexusScrim", dark ? "#DD0A0D14" : "#B82B3242");
+        SetBrush("NexusSidebar", dark ? "#141923" : "#FFFFFF");
+        SetBrush("NexusHeader", dark ? "#E0141923" : "#EDF4F6FA");
     }
 
     private static void SetBrush(string key, string color)

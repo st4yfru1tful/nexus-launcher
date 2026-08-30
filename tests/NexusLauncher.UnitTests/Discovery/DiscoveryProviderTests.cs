@@ -43,6 +43,7 @@ public sealed class DiscoveryProviderTests
         Assert.Equal(LibraryItemCategory.Game, item.Category);
         Assert.Equal("steam://run/620", item.Launch.LaunchUri);
         Assert.Equal(@"C:\Steam\steamapps\common\Portal 2\portal2.exe", item.Launch.ExecutablePath);
+        Assert.Equal(item.Launch.ExecutablePath, item.IconPath);
         Assert.Equal("620", Assert.Single(item.Identities).Value);
     }
 
@@ -89,6 +90,7 @@ public sealed class DiscoveryProviderTests
         var item = Assert.Single(result.Items);
         Assert.Equal("Nexus Launcher", item.DisplayName);
         Assert.Equal(@"C:\Apps\Nexus\Nexus.exe", item.Launch.ExecutablePath);
+        Assert.Equal(item.Launch.ExecutablePath, item.IconPath);
         Assert.Equal("Nexus Team", item.Publisher);
     }
 
@@ -116,6 +118,7 @@ public sealed class DiscoveryProviderTests
         var item = Assert.Single(result.Items);
         Assert.Equal("Nexus Launcher", item.DisplayName);
         Assert.Equal(executablePath, item.Launch.ExecutablePath);
+        Assert.Equal(executablePath, item.IconPath);
         Assert.Equal("start-menu", item.ProviderId);
     }
 

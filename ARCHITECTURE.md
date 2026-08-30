@@ -30,8 +30,9 @@ NexusLauncher.UnitTests
 ~~~
 
 The App project is the composition root. It wires local discovery, persistence,
-store search, optional AI gateway services, and WPF view models. Views do not
-parse manifests, access the registry, or make external requests directly.
+store search, explicitly selected metadata providers, and WPF view models.
+Views do not parse manifests, access the registry, or make external requests
+directly.
 
 ## Local runtime flow
 
@@ -67,27 +68,42 @@ Store URL itself. A Steam result never becomes a local library entry,
 installation request, entitlement, or executable. WinGet output is parsed into
 validated package IDs and only starts after confirmation.
 
-## Optional Nexus AI metadata boundary
+## Optional metadata intelligence boundary
 
-OpenAI is not an authentication provider for the desktop client. The optional
-AI path is a developer-owned Nexus gateway:
+Metadata intelligence is off by default and has two explicitly selected
+providers. There is no silent local-to-cloud fallback.
 
 ~~~text
 Selected local item
   │
-  ├── user enables AI + requests one suggestion
+  ├── user enables metadata intelligence + requests one suggestion
   ├── minimal record: title/provider/publisher/version/file-name/folder-label
   │
-  ▼
-Nexus desktop ── HTTPS + OAuth PKCE ──> Nexus AI gateway
-                                          └── server-owned model integration
+  ├── On-device AI
+  │     └── random IPv4 loopback port ──> Nexus-owned Ollama child
+  │           OLLAMA_NO_CLOUD=1; compatible downloaded text model only
+  │
+  └── Nexus Cloud (only when externally configured)
+        └── HTTPS + OAuth PKCE ──> developer-owned Nexus AI gateway
+                                     └── server-owned model integration
 ~~~
 
-The desktop client has no API-key field and no client secret. A deployment
-configures public DNS HTTPS gateway, authorization, and token endpoints plus a
-public OAuth client ID; an unconfigured build disables AI entirely. OAuth uses
-state and PKCE with a loopback callback. The per-user session is encrypted
-using Windows DPAPI and kept outside settings, diagnostics, and backups.
+For the on-device provider, Nexus starts and owns a dedicated `ollama.exe`
+process, rejects remote endpoints and cloud-model names, disables Ollama cloud,
+and communicates only over its random loopback endpoint. It neither installs
+Ollama nor downloads a model. No web or tool capability is supplied. Requests
+use a structured-output schema, and responses remain bounded and validated.
+
+For Nexus Cloud, the desktop client has no API-key field and no client secret.
+A deployment configures public DNS HTTPS gateway, authorization, and token
+endpoints plus a public OAuth client ID. OAuth uses state and PKCE with a
+loopback callback. The per-user session is encrypted using Windows DPAPI and
+kept outside settings, diagnostics, and backups. The public build includes no
+hosted gateway or identity service.
+
+OpenAI is not an authentication provider for the desktop client. There is no
+embedded OpenAI API credential or end-user OpenAI OAuth flow. A gateway operator
+that chooses OpenAI must keep its application credential on the server.
 
 AiMetadataRequestFactory is the privacy gate. It cannot fall back to a full
 install path, launch URI, launch arguments, or entire local catalog. Gateway
@@ -95,9 +111,23 @@ responses are size-limited and validated. AI output is a suggestion: only the
 user's explicit approval may fill an empty description or add tags; it cannot
 alter a title, executable, URI, arguments, provider identity, or launch action.
 
-The current client supports selected-item metadata suggestions only. It does
+The current providers support selected-item metadata suggestions only. They do
 not claim semantic library search, automatic classification, model-driven
 installs, or a deployed public gateway.
+
+## Visual asset and icon flow
+
+Window, taskbar, installer, logo, ambient, and cover-fallback assets are
+packaged with the application. A remote Store image or local executable icon
+is an enhancement, not a required texture.
+
+Discovery preserves an explicit local icon path when a provider exposes one
+and otherwise uses the validated executable path. The WPF icon service rejects
+UNC/network paths, extracts and freezes local Windows icons, and keeps a bounded
+cache keyed by path and file timestamp. Extraction failures return `null`, so
+the view's packaged or vector fallback remains visible. Store artwork follows
+its separate HTTPS host/size validation boundary and falls back to packaged
+cover art.
 
 ## Provider contracts
 

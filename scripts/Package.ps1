@@ -2,7 +2,7 @@
 param(
     [ValidateSet('Debug', 'Release')]
     [string]$Configuration = 'Release',
-    [string]$Version = '0.2.0',
+    [string]$Version = '1.0.0',
     [ValidateSet('win-x64')]
     [string]$Runtime = 'win-x64',
     [string]$ArtifactsDirectory,
@@ -37,6 +37,8 @@ $repositoryRoot = Split-Path -Parent $PSScriptRoot
 $solution = Join-Path $repositoryRoot 'NexusLauncher.sln'
 $appProject = Join-Path $repositoryRoot 'src/NexusLauncher.App/NexusLauncher.App.csproj'
 $installerScript = Join-Path $repositoryRoot 'installer/NexusLauncher.iss'
+$licenseFile = Join-Path $repositoryRoot 'LICENSE'
+$thirdPartyNoticesFile = Join-Path $repositoryRoot 'THIRD-PARTY-NOTICES.txt'
 
 if ($Version.StartsWith('v', [System.StringComparison]::OrdinalIgnoreCase)) {
     $Version = $Version.Substring(1)
@@ -51,6 +53,8 @@ $fileVersion = "$numericVersion.0"
 
 if (-not (Test-Path -LiteralPath $solution)) { throw "Solution not found: $solution" }
 if (-not (Test-Path -LiteralPath $appProject)) { throw "App project not found: $appProject" }
+if (-not (Test-Path -LiteralPath $licenseFile -PathType Leaf)) { throw "License file not found: $licenseFile" }
+if (-not (Test-Path -LiteralPath $thirdPartyNoticesFile -PathType Leaf)) { throw "Third-party notices file not found: $thirdPartyNoticesFile" }
 
 if ([string]::IsNullOrWhiteSpace($ArtifactsDirectory)) {
     $ArtifactsDirectory = Join-Path $repositoryRoot 'artifacts'
@@ -93,6 +97,12 @@ try {
         -p:DebugType=None `
         -p:DebugSymbols=false
     if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
+
+    # Keep the application license and the notices for the self-contained .NET
+    # runtime in every distributable. The installer consumes this same publish
+    # directory, and the portable archive is copied from it below.
+    Copy-Item -LiteralPath $licenseFile -Destination (Join-Path $publishDirectory 'LICENSE.txt') -Force
+    Copy-Item -LiteralPath $thirdPartyNoticesFile -Destination (Join-Path $publishDirectory 'THIRD-PARTY-NOTICES.txt') -Force
 
     $portablePayload = Join-Path $portableDirectory 'NexusLauncher'
     New-Item -ItemType Directory -Force -Path $portablePayload | Out-Null

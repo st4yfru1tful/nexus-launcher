@@ -2,7 +2,11 @@ using NexusLauncher.App.Models;
 
 namespace NexusLauncher.App.Services;
 
-public sealed record AiMetadataSuggestionOutcome(AiMetadataLookupResult? Suggestion, string Message)
+public sealed record AiMetadataSuggestionOutcome(
+    AiMetadataLookupResult? Suggestion,
+    string Message,
+    string ProviderName = "Nexus AI",
+    bool IsOnDevice = false)
 {
     public bool Succeeded => Suggestion is not null;
 }
@@ -16,16 +20,16 @@ public sealed class AiMetadataCoordinator
 {
     private readonly AppSettings _settings;
     private readonly SettingsService _settingsService;
-    private readonly NexusAiGatewayClient _gateway;
+    private readonly IAiMetadataProvider _provider;
 
-    public AiMetadataCoordinator(AppSettings settings, SettingsService settingsService, NexusAiGatewayClient gateway)
+    public AiMetadataCoordinator(AppSettings settings, SettingsService settingsService, IAiMetadataProvider provider)
     {
         _settings = settings;
         _settingsService = settingsService;
-        _gateway = gateway;
+        _provider = provider;
     }
 
-    public bool CanRequest => _settings.EnableAiMetadata && _gateway.IsConfigured;
+    public bool CanRequest => _settings.EnableAiMetadata;
     public event Action? UsageChanged;
 
     public async Task<AiMetadataSuggestionOutcome> SuggestAsync(LibraryItem item, CancellationToken cancellationToken = default)
@@ -33,31 +37,43 @@ public sealed class AiMetadataCoordinator
         ArgumentNullException.ThrowIfNull(item);
         if (!_settings.EnableAiMetadata)
         {
-            return new AiMetadataSuggestionOutcome(null, "AI metadata suggestions are turned off in Settings.");
+            return Failure("AI metadata suggestions are turned off in Settings.");
         }
 
-        if (!_gateway.IsConfigured)
+        var availability = await _provider.GetAvailabilityAsync(cancellationToken);
+        if (!availability.IsReady)
         {
-            return new AiMetadataSuggestionOutcome(null, "Nexus AI is not configured in this build. No library metadata was sent.");
+            return Failure(availability.Message);
         }
 
-        NormalizeMonthlyUsage();
-        if (_settings.AiRequestsThisMonth >= _settings.AiMonthlyRequestLimit)
+        if (!_provider.IsOnDevice)
         {
-            return new AiMetadataSuggestionOutcome(null, $"Your local AI request limit of {_settings.AiMonthlyRequestLimit} for this month has been reached.");
+            NormalizeMonthlyUsage();
+            if (_settings.AiRequestsThisMonth >= _settings.AiMonthlyRequestLimit)
+            {
+                return Failure($"Your Nexus Cloud request limit of {_settings.AiMonthlyRequestLimit} for this month has been reached.");
+            }
         }
 
         var request = AiMetadataRequestFactory.Create(item);
-        var response = await _gateway.LookupMetadataAsync(request, cancellationToken);
+        var response = await _provider.LookupMetadataAsync(request, cancellationToken);
         if (!response.Succeeded)
         {
-            return new AiMetadataSuggestionOutcome(null, DescribeFailure(response.Status));
+            return Failure(DescribeFailure(response.Status));
         }
 
-        _settings.AiRequestsThisMonth++;
-        await _settingsService.SaveAsync(_settings);
-        UsageChanged?.Invoke();
-        return new AiMetadataSuggestionOutcome(response.Result, "Nexus AI returned reviewable metadata suggestions.");
+        if (!_provider.IsOnDevice)
+        {
+            _settings.AiRequestsThisMonth++;
+            await _settingsService.SaveAsync(_settings);
+            UsageChanged?.Invoke();
+        }
+
+        return new AiMetadataSuggestionOutcome(
+            response.Result,
+            $"{_provider.DisplayName} returned reviewable metadata suggestions.",
+            _provider.DisplayName,
+            _provider.IsOnDevice);
     }
 
     /// <summary>
@@ -101,11 +117,17 @@ public sealed class AiMetadataCoordinator
 
     private static string DescribeFailure(AiGatewayLookupStatus status) => status switch
     {
+        AiGatewayLookupStatus.NotConfigured => "Nexus Cloud is not configured. Select on-device AI or configure a trusted Nexus gateway.",
         AiGatewayLookupStatus.NotConnected => "Sign in to Nexus AI in Settings before requesting metadata suggestions.",
+        AiGatewayLookupStatus.LocalRuntimeUnavailable => "On-device AI needs Ollama for Windows. Install it from the official Ollama site, then refresh AI status in Settings.",
+        AiGatewayLookupStatus.LocalModelUnavailable => "On-device AI needs a downloaded local Ollama model that supports text generation. Embedding-only and cloud models are not used, and Nexus never downloads a model without you choosing to do so.",
         AiGatewayLookupStatus.RateLimited => "Nexus AI is temporarily rate limited. Try again later.",
         AiGatewayLookupStatus.RequestRejected => "Nexus did not send this metadata request because its local safety checks rejected it.",
         AiGatewayLookupStatus.InvalidResponse => "Nexus AI returned data Nexus could not safely use.",
         AiGatewayLookupStatus.Unavailable => "Nexus AI is unavailable right now. Your local library was not changed.",
         _ => "Nexus AI metadata suggestions are unavailable."
     };
+
+    private AiMetadataSuggestionOutcome Failure(string message) =>
+        new(null, message, _provider.DisplayName, _provider.IsOnDevice);
 }

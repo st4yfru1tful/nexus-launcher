@@ -105,6 +105,7 @@ public sealed class StartMenuDiscoveryProvider : IInstallationDiscoveryProvider
         }
 
         var name = metadata.ProductName ?? Path.GetFileNameWithoutExtension(shortcutPath);
+        var iconPath = ResolveIconPath(shortcut.IconLocation, executablePath);
         return new DiscoveredInstallation
         {
             DisplayName = name,
@@ -112,6 +113,7 @@ public sealed class StartMenuDiscoveryProvider : IInstallationDiscoveryProvider
                 ? LibraryItemCategory.Application
                 : classification.Category,
             InstallPath = Path.GetDirectoryName(executablePath),
+            IconPath = iconPath,
             Publisher = metadata.CompanyName,
             Version = metadata.FileVersion,
             ProviderId = Id,
@@ -129,6 +131,19 @@ public sealed class StartMenuDiscoveryProvider : IInstallationDiscoveryProvider
             },
             SourcePaths = new[] { shortcutPath },
         };
+    }
+
+    private string? ResolveIconPath(string? iconLocation, string executablePath)
+    {
+        if (IconPathNormalizer.TryNormalize(iconLocation, out var explicitIconPath) &&
+            _fileSystem.FileExists(explicitIconPath))
+        {
+            return explicitIconPath;
+        }
+
+        return IconPathNormalizer.TryNormalize(executablePath, out var executableIconPath)
+            ? executableIconPath
+            : null;
     }
 
     private static IEnumerable<string> GetDefaultLocations()

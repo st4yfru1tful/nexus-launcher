@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Nexus Launcher icon</title>
+  <desc id="desc">An original violet connected-node mark on a rounded dark tile.</desc>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#171d2b"/>
+      <stop offset="1" stop-color="#090d16"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#b0a8ff"/>
+      <stop offset="0.55" stop-color="#7b6cff"/>
+      <stop offset="1" stop-color="#58b8e8"/>
+    </linearGradient>
+  </defs>
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#tile)" stroke="#313b54" stroke-width="8"/>
+  <path d="M256 96 394.6 176v160L256 416 117.4 336V176Z"
+        fill="#20283b" stroke="url(#accent)" stroke-width="28" stroke-linejoin="round"/>
+  <path d="m177 329 158-146M177 183l158 146"
+        fill="none" stroke="#f7f9ff" stroke-width="25" stroke-linecap="round"/>
+  <circle cx="177" cy="183" r="24" fill="#f7f9ff"/>
+  <circle cx="335" cy="183" r="24" fill="#f7f9ff"/>
+  <circle cx="177" cy="329" r="24" fill="#f7f9ff"/>
+  <circle cx="335" cy="329" r="24" fill="#f7f9ff"/>
+</svg>

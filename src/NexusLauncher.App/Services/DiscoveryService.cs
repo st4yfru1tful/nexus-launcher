@@ -75,6 +75,7 @@ public sealed class DiscoveryService(ExecutableInspector inspector)
             LaunchArguments = installation.Launch.Arguments,
             WorkingDirectory = installation.Launch.WorkingDirectory,
             InstallPath = installation.InstallPath,
+            IconPath = installation.IconPath,
             Provider = installation.ProviderId switch
             {
                 "steam" => "Steam",
@@ -199,6 +200,7 @@ public sealed class DiscoveryService(ExecutableInspector inspector)
                     ExecutablePath = exe,
                     WorkingDirectory = folder,
                     InstallPath = folder,
+                    IconPath = exe,
                     Description = $"Steam App ID {id}",
                     Tags = ["Steam"]
                 };

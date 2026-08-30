@@ -2,13 +2,13 @@
 
 ## Supported versions
 
-Nexus is prerelease software. Security fixes target the latest development work
-and the most recent published 0.2.x release, if one exists.
+Security fixes target the latest development work and the most recent
+published 1.0.x release.
 
 | Version line | Security support |
 | --- | --- |
 | Latest development branch | Best effort |
-| Latest published 0.2.x | Best effort |
+| Latest published 1.0.x | Supported |
 | Older versions | Not supported |
 
 ## Reporting a vulnerability
@@ -63,7 +63,30 @@ WinGet installation remains an explicit user-confirmed handoff to the locally
 installed Windows Package Manager. A provider-controlled string must never be
 interpolated into a shell command.
 
-## Nexus AI gateway boundary
+## On-device metadata intelligence boundary
+
+The on-device provider treats the local model runtime and its output as
+untrusted:
+
+- Nexus resolves a local `ollama.exe` from known installation locations and
+  starts it directly without shell interpolation.
+- The Nexus-owned process binds only to a random IPv4 loopback port and starts
+  with `OLLAMA_NO_CLOUD=1` and model keep-alive disabled. Nexus's loopback HTTP
+  client does not use a proxy.
+- Nexus accepts only already-downloaded models whose local details explicitly
+  advertise text-generation capability. It rejects embedding-only and
+  cloud-model candidates and never installs Ollama or pulls a model.
+- No remote/custom endpoint, web access, or tool execution is exposed to the
+  local provider.
+- Requests and responses are bounded, JSON output is constrained by a schema
+  and validated again locally, and all changes remain review-before-apply.
+- Nexus owns and stops the child process. It does not attach to or terminate an
+  unrelated Ollama process.
+
+The local provider is not a sandbox for a malicious model or compromised
+runtime. Users should install Ollama and models only from sources they trust.
+
+## Nexus Cloud gateway boundary
 
 The desktop app has no OpenAI API key field and never directly calls OpenAI.
 Its optional OAuth flow is only for a developer-owned Nexus AI gateway:
@@ -85,7 +108,18 @@ Its optional OAuth flow is only for a developer-owned Nexus AI gateway:
 
 A gateway operator must enforce its own authentication, authorization,
 rate-limits, abuse controls, retention policy, and server-side credential
-storage. The public v0.2.0 build contains no configured production gateway.
+storage. The public v1.0.0 build contains no configured production gateway.
+On-device AI never silently falls back to Nexus Cloud.
+
+## Local icon and packaged-image boundary
+
+Nexus uses packaged application, ambient, and cover fallback assets so an
+unavailable image does not become a missing-texture state. Library icons are
+read only from normalized local files. UNC/network paths are rejected, icon
+extraction is isolated behind safe failure states, results and misses use a
+bounded cache, and a packaged/vector fallback remains visible when extraction
+fails. Remote Store images remain untrusted provider data and must use HTTPS,
+allowed hosts, response limits, and a local fallback.
 
 ## Provider and plugin expectations
 

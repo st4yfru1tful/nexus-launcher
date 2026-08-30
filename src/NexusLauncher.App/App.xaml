@@ -12,6 +12,19 @@
       <Color x:Key="NexusMutedTextColor">#A4AEC2</Color>
       <Color x:Key="NexusAccentColor">#7B6CFF</Color>
       <Color x:Key="NexusAccentHoverColor">#958AFF</Color>
+      <Color x:Key="NexusAccentTextColor">#A69CFF</Color>
+      <Color x:Key="NexusFocusColor">#F7F9FC</Color>
+      <Color x:Key="NexusInputColor">#111722</Color>
+      <Color x:Key="NexusBorderColor">#354057</Color>
+      <Color x:Key="NexusBorderStrongColor">#526583</Color>
+      <Color x:Key="NexusHoverColor">#202A3C</Color>
+      <Color x:Key="NexusSelectedColor">#30294E</Color>
+      <Color x:Key="NexusOnAccentColor">#0B0E18</Color>
+      <Color x:Key="NexusDangerSurfaceColor">#3A1C29</Color>
+      <Color x:Key="NexusDangerBorderColor">#98566E</Color>
+      <Color x:Key="NexusScrimColor">#DD0A0D14</Color>
+      <Color x:Key="NexusSidebarColor">#141923</Color>
+      <Color x:Key="NexusHeaderColor">#E0141923</Color>
       <SolidColorBrush x:Key="NexusBackground" Color="{StaticResource NexusBackgroundColor}" />
       <SolidColorBrush x:Key="NexusPanel" Color="{StaticResource NexusPanelColor}" />
       <SolidColorBrush x:Key="NexusPanelRaised" Color="{StaticResource NexusPanelRaisedColor}" />
@@ -19,6 +32,19 @@
       <SolidColorBrush x:Key="NexusMutedText" Color="{StaticResource NexusMutedTextColor}" />
       <SolidColorBrush x:Key="NexusAccent" Color="{StaticResource NexusAccentColor}" />
       <SolidColorBrush x:Key="NexusAccentHover" Color="{StaticResource NexusAccentHoverColor}" />
+      <SolidColorBrush x:Key="NexusAccentText" Color="{StaticResource NexusAccentTextColor}" />
+      <SolidColorBrush x:Key="NexusFocus" Color="{StaticResource NexusFocusColor}" />
+      <SolidColorBrush x:Key="NexusInput" Color="{StaticResource NexusInputColor}" />
+      <SolidColorBrush x:Key="NexusBorder" Color="{StaticResource NexusBorderColor}" />
+      <SolidColorBrush x:Key="NexusBorderStrong" Color="{StaticResource NexusBorderStrongColor}" />
+      <SolidColorBrush x:Key="NexusHover" Color="{StaticResource NexusHoverColor}" />
+      <SolidColorBrush x:Key="NexusSelected" Color="{StaticResource NexusSelectedColor}" />
+      <SolidColorBrush x:Key="NexusOnAccent" Color="{StaticResource NexusOnAccentColor}" />
+      <SolidColorBrush x:Key="NexusDangerSurface" Color="{StaticResource NexusDangerSurfaceColor}" />
+      <SolidColorBrush x:Key="NexusDangerBorder" Color="{StaticResource NexusDangerBorderColor}" />
+      <SolidColorBrush x:Key="NexusScrim" Color="{StaticResource NexusScrimColor}" />
+      <SolidColorBrush x:Key="NexusSidebar" Color="{StaticResource NexusSidebarColor}" />
+      <SolidColorBrush x:Key="NexusHeader" Color="{StaticResource NexusHeaderColor}" />
 
       <Style TargetType="Window">
         <Setter Property="Background" Value="{DynamicResource NexusBackground}" />
@@ -29,7 +55,7 @@
       <Style TargetType="Button">
         <Setter Property="Foreground" Value="{DynamicResource NexusText}" />
         <Setter Property="Background" Value="{DynamicResource NexusPanelRaised}" />
-        <Setter Property="BorderBrush" Value="#32405A" />
+        <Setter Property="BorderBrush" Value="{DynamicResource NexusBorder}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="12,7" />
         <Setter Property="Cursor" Value="Hand" />
@@ -43,10 +69,11 @@
               <ControlTemplate.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                   <Setter TargetName="border" Property="Background" Value="{DynamicResource NexusAccentHover}" />
-                  <Setter Property="Foreground" Value="White" />
+                  <Setter Property="Foreground" Value="{DynamicResource NexusOnAccent}" />
                 </Trigger>
                 <Trigger Property="IsPressed" Value="True"><Setter TargetName="border" Property="Opacity" Value="0.78" /></Trigger>
                 <Trigger Property="IsEnabled" Value="False"><Setter TargetName="border" Property="Opacity" Value="0.43" /></Trigger>
+                <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="border" Property="BorderBrush" Value="{DynamicResource NexusFocus}" /><Setter TargetName="border" Property="BorderThickness" Value="2" /></Trigger>
               </ControlTemplate.Triggers>
             </ControlTemplate>
           </Setter.Value>
@@ -55,11 +82,12 @@
       <Style x:Key="AccentButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
         <Setter Property="Background" Value="{DynamicResource NexusAccent}" />
         <Setter Property="BorderBrush" Value="{DynamicResource NexusAccent}" />
+        <Setter Property="Foreground" Value="{DynamicResource NexusOnAccent}" />
       </Style>
       <Style TargetType="TextBox">
-        <Setter Property="Background" Value="#121722" />
+        <Setter Property="Background" Value="{DynamicResource NexusInput}" />
         <Setter Property="Foreground" Value="{DynamicResource NexusText}" />
-        <Setter Property="BorderBrush" Value="#354057" />
+        <Setter Property="BorderBrush" Value="{DynamicResource NexusBorder}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="10,7" />
         <Setter Property="CaretBrush" Value="{DynamicResource NexusText}" />
@@ -76,10 +104,10 @@
               </Border>
               <ControlTemplate.Triggers>
                 <Trigger Property="IsHighlighted" Value="True">
-                  <Setter TargetName="surface" Property="Background" Value="#2A7B6CFF" />
+                  <Setter TargetName="surface" Property="Background" Value="{DynamicResource NexusHover}" />
                 </Trigger>
                 <Trigger Property="IsSelected" Value="True">
-                  <Setter TargetName="surface" Property="Background" Value="#3B7B6CFF" />
+                  <Setter TargetName="surface" Property="Background" Value="{DynamicResource NexusSelected}" />
                 </Trigger>
               </ControlTemplate.Triggers>
             </ControlTemplate>
@@ -89,7 +117,7 @@
       <Style TargetType="ComboBox">
         <Setter Property="Background" Value="{DynamicResource NexusPanel}" />
         <Setter Property="Foreground" Value="{DynamicResource NexusText}" />
-        <Setter Property="BorderBrush" Value="#354057" />
+        <Setter Property="BorderBrush" Value="{DynamicResource NexusBorder}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="11,7" />
         <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled" />
@@ -136,6 +164,10 @@
                         <Trigger Property="IsChecked" Value="True">
                           <Setter TargetName="surface" Property="BorderBrush" Value="{DynamicResource NexusAccent}" />
                         </Trigger>
+                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                          <Setter TargetName="surface" Property="BorderBrush" Value="{DynamicResource NexusFocus}" />
+                          <Setter TargetName="surface" Property="BorderThickness" Value="2" />
+                        </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                           <Setter TargetName="surface" Property="Opacity" Value="0.45" />
                         </Trigger>
@@ -151,7 +183,7 @@
                   <Border MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
                           MaxHeight="{TemplateBinding MaxDropDownHeight}"
                           Background="{DynamicResource NexusPanelRaised}"
-                          BorderBrush="#526583"
+                          BorderBrush="{DynamicResource NexusBorderStrong}"
                           BorderThickness="1"
                           CornerRadius="10"
                           Padding="5"

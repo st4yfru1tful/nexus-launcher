@@ -36,6 +36,7 @@ public sealed class ExecutableInspector
             ExecutablePath = executablePath,
             WorkingDirectory = Path.GetDirectoryName(executablePath),
             InstallPath = Path.GetDirectoryName(executablePath),
+            IconPath = NexusLauncher.Core.Paths.IconPathNormalizer.TryNormalize(executablePath, out var iconPath) ? iconPath : null,
             Provider = isManual ? "Manual" : "Windows",
             Publisher = BlankToNull(info?.CompanyName),
             Version = BlankToNull(info?.ProductVersion),

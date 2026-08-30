@@ -59,7 +59,14 @@ public sealed class LibraryItem : ObservableObject
     public string? LaunchUri { get => _launchUri; set => SetProperty(ref _launchUri, value); }
     public string? LaunchArguments { get => _launchArguments; set => SetProperty(ref _launchArguments, value); }
     public string? WorkingDirectory { get => _workingDirectory; set => SetProperty(ref _workingDirectory, value); }
-    public string? InstallPath { get => _installPath; set => SetProperty(ref _installPath, value); }
+    public string? InstallPath
+    {
+        get => _installPath;
+        set
+        {
+            if (SetProperty(ref _installPath, value)) OnPropertyChanged(nameof(InstallLocationDisplay));
+        }
+    }
     public string? Provider
     {
         get => _provider;
@@ -68,9 +75,30 @@ public sealed class LibraryItem : ObservableObject
             if (SetProperty(ref _provider, value)) OnPropertyChanged(nameof(DisplayProvider));
         }
     }
-    public string? Description { get => _description; set => SetProperty(ref _description, value); }
-    public string? Publisher { get => _publisher; set => SetProperty(ref _publisher, value); }
-    public string? Version { get => _version; set => SetProperty(ref _version, value); }
+    public string? Description
+    {
+        get => _description;
+        set
+        {
+            if (SetProperty(ref _description, value)) OnPropertyChanged(nameof(DescriptionDisplay));
+        }
+    }
+    public string? Publisher
+    {
+        get => _publisher;
+        set
+        {
+            if (SetProperty(ref _publisher, value)) OnPropertyChanged(nameof(PublisherDisplay));
+        }
+    }
+    public string? Version
+    {
+        get => _version;
+        set
+        {
+            if (SetProperty(ref _version, value)) OnPropertyChanged(nameof(VersionDisplay));
+        }
+    }
     public string? IconPath { get => _iconPath; set => SetProperty(ref _iconPath, value); }
     public List<string> Tags { get => _tags; set => SetProperty(ref _tags, value?.OfType<string>().ToList() ?? []); }
     public DateTimeOffset DateDiscovered { get => _dateDiscovered; set => SetProperty(ref _dateDiscovered, value); }
@@ -82,15 +110,41 @@ public sealed class LibraryItem : ObservableObject
             if (SetProperty(ref _lastPlayed, value)) OnPropertyChanged(nameof(LaunchActivityDisplay));
         }
     }
-    public bool IsFavorite { get => _isFavorite; set => SetProperty(ref _isFavorite, value); }
-    public bool IsHidden { get => _isHidden; set => SetProperty(ref _isHidden, value); }
+    public bool IsFavorite
+    {
+        get => _isFavorite;
+        set
+        {
+            if (SetProperty(ref _isFavorite, value)) OnPropertyChanged(nameof(FavoriteActionLabel));
+        }
+    }
+    public bool IsHidden
+    {
+        get => _isHidden;
+        set
+        {
+            if (SetProperty(ref _isHidden, value)) OnPropertyChanged(nameof(VisibilityActionLabel));
+        }
+    }
     public bool IsManual { get => _isManual; set => SetProperty(ref _isManual, value); }
     public long? InstallSizeBytes { get => _installSizeBytes; set => SetProperty(ref _installSizeBytes, value); }
 
     [JsonIgnore]
     public string DisplayProvider => string.IsNullOrWhiteSpace(Provider) ? "Local" : Provider;
+    [JsonIgnore]
+    public string PublisherDisplay => string.IsNullOrWhiteSpace(Publisher) ? "Not provided" : Publisher;
+    [JsonIgnore]
+    public string VersionDisplay => string.IsNullOrWhiteSpace(Version) ? "Not provided" : Version;
+    [JsonIgnore]
+    public string DescriptionDisplay => string.IsNullOrWhiteSpace(Description) ? "No description yet" : Description;
+    [JsonIgnore]
+    public string InstallLocationDisplay => string.IsNullOrWhiteSpace(InstallPath) ? "Not provided" : InstallPath;
+    [JsonIgnore]
+    public string FavoriteActionLabel => IsFavorite ? "Remove from favorites" : "Add to favorites";
+    [JsonIgnore]
+    public string VisibilityActionLabel => IsHidden ? "Show in library" : "Hide from library";
     /// <summary>
-    /// Nexus v0.1 records that a launch was requested, but deliberately does not
+    /// Nexus records that a launch was requested, but deliberately does not
     /// estimate playtime across external launchers or provider URIs.
     /// </summary>
     [JsonIgnore]

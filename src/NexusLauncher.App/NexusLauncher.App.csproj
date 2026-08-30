@@ -6,9 +6,19 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\NexusLauncher.ico</ApplicationIcon>
     <AssemblyName>NexusLauncher</AssemblyName>
     <RootNamespace>NexusLauncher.App</RootNamespace>
+    <Product>Nexus Launcher</Product>
+    <Description>Local-first game and application library for Windows</Description>
+    <Company>Nexus Launcher Contributors</Company>
+    <Authors>Nexus Launcher Contributors</Authors>
+    <Copyright>Copyright © 2026 Nexus Launcher contributors</Copyright>
   </PropertyGroup>
+  <ItemGroup>
+    <Resource Include="Assets\NexusLauncher.ico" />
+    <Resource Include="Assets\*.png" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\NexusLauncher.Core\NexusLauncher.Core.csproj" />
     <ProjectReference Include="..\NexusLauncher.Discovery\NexusLauncher.Discovery.csproj" />

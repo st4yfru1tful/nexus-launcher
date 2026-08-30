@@ -15,6 +15,12 @@ public sealed record DiscoveredInstallation
 
     public string? InstallPath { get; init; }
 
+    /// <summary>
+    /// Optional local executable, DLL, or ICO source used only for shell icon
+    /// extraction. Consumers must still apply their own local-path policy.
+    /// </summary>
+    public string? IconPath { get; init; }
+
     public string? Publisher { get; init; }
 
     public string? Version { get; init; }

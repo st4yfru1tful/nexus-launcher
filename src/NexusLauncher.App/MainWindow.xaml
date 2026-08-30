@@ -5,14 +5,19 @@
         xmlns:models="clr-namespace:NexusLauncher.App.Models"
         xmlns:infra="clr-namespace:NexusLauncher.App.Infrastructure"
         Title="Nexus Launcher"
+        Icon="Assets/NexusLauncher.ico"
         Width="1380"
         Height="840"
-        MinWidth="1060"
-        MinHeight="700"
+        MinWidth="860"
+        MinHeight="460"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource NexusBackground}"
         Foreground="{DynamicResource NexusText}"
-        Loaded="Window_Loaded">
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        Loaded="Window_Loaded"
+        PreviewKeyDown="Window_PreviewKeyDown"
+        Closing="Window_Closing">
   <Window.InputBindings>
     <KeyBinding Key="K" Modifiers="Control" Command="{Binding OpenCommandPaletteCommand}" />
     <KeyBinding Key="F5" Command="{Binding ScanCommand}" />
@@ -21,6 +26,7 @@
 
   <Window.Resources>
     <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    <infra:LibraryIconConverter x:Key="LibraryIconConverter" />
 
     <Style TargetType="TextBlock">
       <Setter Property="Foreground" Value="{DynamicResource NexusText}" />
@@ -32,6 +38,7 @@
       <Setter Property="Margin" Value="0,2" />
       <Setter Property="Foreground" Value="{DynamicResource NexusMutedText}" />
       <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="AutomationProperties.Name" Value="{Binding Title}" />
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="ListBoxItem">
@@ -53,12 +60,16 @@
             <ControlTemplate.Triggers>
               <Trigger Property="IsSelected" Value="True">
                 <Setter TargetName="indicator" Property="Background" Value="{DynamicResource NexusAccent}" />
-                <Setter TargetName="surface" Property="Background" Value="#251A2642" />
+                <Setter TargetName="surface" Property="Background" Value="{DynamicResource NexusSelected}" />
                 <Setter Property="Foreground" Value="{DynamicResource NexusText}" />
               </Trigger>
               <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="surface" Property="Background" Value="#171F2A3D" />
+                <Setter TargetName="surface" Property="Background" Value="{DynamicResource NexusHover}" />
                 <Setter Property="Foreground" Value="{DynamicResource NexusText}" />
+              </Trigger>
+              <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                <Setter TargetName="surface" Property="BorderBrush" Value="{DynamicResource NexusFocus}" />
+                <Setter TargetName="surface" Property="BorderThickness" Value="2" />
               </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
@@ -70,6 +81,7 @@
       <Setter Property="Padding" Value="0" />
       <Setter Property="Margin" Value="0,3" />
       <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="AutomationProperties.Name" Value="{Binding Name}" />
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="ListBoxItem">
@@ -83,11 +95,15 @@
             </Border>
             <ControlTemplate.Triggers>
               <Trigger Property="IsSelected" Value="True">
-                <Setter TargetName="surface" Property="Background" Value="#2A7B6CFF" />
-                <Setter TargetName="surface" Property="BorderBrush" Value="#807B6CFF" />
+                <Setter TargetName="surface" Property="Background" Value="{DynamicResource NexusSelected}" />
+                <Setter TargetName="surface" Property="BorderBrush" Value="{DynamicResource NexusAccent}" />
               </Trigger>
               <Trigger Property="IsMouseOver" Value="True">
-                <Setter TargetName="surface" Property="Background" Value="#142A3448" />
+                <Setter TargetName="surface" Property="Background" Value="{DynamicResource NexusHover}" />
+              </Trigger>
+              <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                <Setter TargetName="surface" Property="BorderBrush" Value="{DynamicResource NexusFocus}" />
+                <Setter TargetName="surface" Property="BorderThickness" Value="2" />
               </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
@@ -97,10 +113,22 @@
 
     <Style x:Key="Card" TargetType="Border">
       <Setter Property="Background" Value="{DynamicResource NexusPanel}" />
-      <Setter Property="BorderBrush" Value="#283349" />
+      <Setter Property="BorderBrush" Value="{DynamicResource NexusBorder}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="16" />
       <Setter Property="Padding" Value="20" />
+    </Style>
+
+    <Style x:Key="SearchFieldBorder" TargetType="Border">
+      <Setter Property="Background" Value="{DynamicResource NexusInput}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource NexusBorder}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Style.Triggers>
+        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+          <Setter Property="BorderBrush" Value="{DynamicResource NexusFocus}" />
+          <Setter Property="BorderThickness" Value="2" />
+        </Trigger>
+      </Style.Triggers>
     </Style>
 
     <Style x:Key="PageTitle" TargetType="TextBlock">
@@ -118,17 +146,17 @@
     <Style x:Key="Eyebrow" TargetType="TextBlock">
       <Setter Property="FontSize" Value="10" />
       <Setter Property="FontWeight" Value="Bold" />
-      <Setter Property="Foreground" Value="{DynamicResource NexusAccent}" />
+      <Setter Property="Foreground" Value="{DynamicResource NexusAccentText}" />
     </Style>
 
     <Style x:Key="QuietButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
       <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="#34415C" />
+      <Setter Property="BorderBrush" Value="{DynamicResource NexusBorder}" />
     </Style>
 
     <Style x:Key="SmallPill" TargetType="Border">
-      <Setter Property="Background" Value="#172A3448" />
-      <Setter Property="BorderBrush" Value="#31425B79" />
+      <Setter Property="Background" Value="{DynamicResource NexusHover}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource NexusBorder}" />
       <Setter Property="BorderThickness" Value="1" />
       <Setter Property="CornerRadius" Value="9" />
       <Setter Property="Padding" Value="8,4" />
@@ -139,7 +167,7 @@
               Height="142"
               Margin="0,0,14,0"
               Background="{DynamicResource NexusPanel}"
-              BorderBrush="#2B3952"
+              BorderBrush="{DynamicResource NexusBorder}"
               BorderThickness="1"
               CornerRadius="14"
               ClipToBounds="True">
@@ -160,18 +188,30 @@
               <RowDefinition Height="*" />
               <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
-            <Border Width="38"
+              <Border Width="38"
                     Height="38"
                     Background="#E9303658"
                     CornerRadius="11"
                     HorizontalAlignment="Left"
-                    VerticalAlignment="Top">
-              <TextBlock Text="{Binding Initial}"
-                         FontSize="17"
-                         FontWeight="Bold"
-                         Foreground="White"
-                         HorizontalAlignment="Center"
-                         VerticalAlignment="Center" />
+                    VerticalAlignment="Top"
+                    ClipToBounds="True">
+              <Grid>
+                <Image Source="Assets/nexus-logo-512.png" Opacity="0.14" Stretch="UniformToFill" />
+                <TextBlock Text="{Binding Initial}"
+                           FontSize="17"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
+                <Image Stretch="Uniform" Margin="4" RenderOptions.BitmapScalingMode="HighQuality">
+                  <Image.Source>
+                    <MultiBinding Converter="{StaticResource LibraryIconConverter}">
+                      <Binding Path="IconPath" />
+                      <Binding Path="ExecutablePath" />
+                    </MultiBinding>
+                  </Image.Source>
+                </Image>
+              </Grid>
             </Border>
             <StackPanel Grid.Row="1">
               <TextBlock Text="{Binding CategoryLabel}"
@@ -198,7 +238,7 @@
     <DataTemplate DataType="{x:Type vm:HomeViewModel}">
       <ScrollViewer VerticalScrollBarVisibility="Auto"
                     HorizontalScrollBarVisibility="Disabled">
-        <StackPanel Margin="38,32,38,38">
+        <StackPanel Margin="30,26,30,30">
           <Grid Margin="0,0,0,24">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="*" />
@@ -343,6 +383,18 @@
             <TextBlock Text="Recently launched" Style="{StaticResource SectionTitle}" />
             <TextBlock Grid.Column="1" Text="Activity stays on this PC" Foreground="{DynamicResource NexusMutedText}" FontSize="12" VerticalAlignment="Center" />
           </Grid>
+          <Border Margin="0,0,0,14" Padding="16,13">
+            <Border.Style>
+              <Style TargetType="Border" BasedOn="{StaticResource Card}">
+                <Setter Property="Visibility" Value="Collapsed" />
+                <Style.Triggers><DataTrigger Binding="{Binding HasRecentItems}" Value="False"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
+              </Style>
+            </Border.Style>
+            <StackPanel Orientation="Horizontal">
+              <Image Source="Assets/nexus-logo-512.png" Width="34" Height="34" Margin="0,0,12,0" />
+              <StackPanel VerticalAlignment="Center"><TextBlock Text="Nothing launched yet" FontWeight="SemiBold" /><TextBlock Text="Launch something from Library and it will appear here." Foreground="{DynamicResource NexusMutedText}" FontSize="11" Margin="0,3,0,0" /></StackPanel>
+            </StackPanel>
+          </Border>
           <ScrollViewer HorizontalScrollBarVisibility="Auto"
                         VerticalScrollBarVisibility="Disabled"
                         Margin="0,0,0,28">
@@ -363,6 +415,18 @@
             <TextBlock Text="Your favorites" Style="{StaticResource SectionTitle}" />
             <TextBlock Grid.Column="1" Text="Mark titles in Library to pin them here" Foreground="{DynamicResource NexusMutedText}" FontSize="12" VerticalAlignment="Center" />
           </Grid>
+          <Border Margin="0,0,0,14" Padding="16,13">
+            <Border.Style>
+              <Style TargetType="Border" BasedOn="{StaticResource Card}">
+                <Setter Property="Visibility" Value="Collapsed" />
+                <Style.Triggers><DataTrigger Binding="{Binding HasFavorites}" Value="False"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
+              </Style>
+            </Border.Style>
+            <StackPanel Orientation="Horizontal">
+              <Border Width="34" Height="34" CornerRadius="10" Background="{DynamicResource NexusSelected}" Margin="0,0,12,0"><TextBlock Text="&#xE734;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+              <StackPanel VerticalAlignment="Center"><TextBlock Text="No favorites yet" FontWeight="SemiBold" /><TextBlock Text="Choose Favorite on any library item to pin it here." Foreground="{DynamicResource NexusMutedText}" FontSize="11" Margin="0,3,0,0" /></StackPanel>
+            </StackPanel>
+          </Border>
           <ScrollViewer HorizontalScrollBarVisibility="Auto"
                         VerticalScrollBarVisibility="Disabled">
             <ItemsControl ItemsSource="{Binding Favorites}" ItemTemplate="{StaticResource MiniItem}">
@@ -378,7 +442,7 @@
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:LibraryViewModel}">
-      <Grid Margin="38,32,38,36">
+      <Grid Margin="30,26,30,30">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
           <RowDefinition Height="Auto" />
@@ -396,8 +460,12 @@
             <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource NexusMutedText}" Margin="0,7,0,0" />
           </StackPanel>
           <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-            <Button Content="Add executable" Command="{Binding AddExecutableCommand}" Style="{StaticResource QuietButton}" Margin="0,0,10,0" />
-            <Button Content="Rescan" Style="{StaticResource AccentButton}" Command="{Binding DataContext.ScanCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+            <Button Command="{Binding AddExecutableCommand}" Style="{StaticResource QuietButton}" Margin="0,0,10,0" AutomationProperties.Name="Add executable">
+              <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,7,0" /><TextBlock Text="Add executable" /></StackPanel>
+            </Button>
+            <Button Style="{StaticResource AccentButton}" Command="{Binding DataContext.ScanCommand, RelativeSource={RelativeSource AncestorType=Window}}" AutomationProperties.Name="Rescan library">
+              <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,7,0" /><TextBlock Text="Rescan" /></StackPanel>
+            </Button>
           </StackPanel>
         </Grid>
 
@@ -407,7 +475,7 @@
             <ColumnDefinition Width="170" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
-          <Border Height="44" Background="{DynamicResource NexusPanel}" BorderBrush="#31415D" BorderThickness="1" CornerRadius="11">
+          <Border Height="44" Background="{DynamicResource NexusPanel}" Style="{StaticResource SearchFieldBorder}" CornerRadius="11">
             <Grid>
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="42" />
@@ -417,14 +485,15 @@
               <TextBox Grid.Column="1"
                        Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                        ToolTip="Search your library"
+                       AutomationProperties.Name="Search library"
                        BorderThickness="0"
                        Background="Transparent"
                        VerticalContentAlignment="Center"
                        Padding="0,0,12,0" />
             </Grid>
           </Border>
-          <ComboBox Grid.Column="1" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Margin="12,0,0,0" />
-          <Border Grid.Column="2" Style="{StaticResource SmallPill}" Background="Transparent" BorderBrush="#31415D" Margin="12,0,0,0">
+          <ComboBox Grid.Column="1" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Margin="12,0,0,0" AutomationProperties.Name="Library category" />
+          <Border Grid.Column="2" Style="{StaticResource SmallPill}" Background="Transparent" BorderBrush="{DynamicResource NexusBorder}" Margin="12,0,0,0">
             <CheckBox Content="Show hidden" IsChecked="{Binding ShowHidden}" VerticalAlignment="Center" />
           </Border>
         </Grid>
@@ -461,8 +530,18 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                       </Grid.ColumnDefinitions>
-                      <Border Width="42" Height="42" CornerRadius="13" VerticalAlignment="Center" Background="#257B6CFF">
-                        <TextBlock Text="{Binding Initial}" FontSize="17" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                      <Border Width="42" Height="42" CornerRadius="13" VerticalAlignment="Center" Background="#257B6CFF" ClipToBounds="True">
+                        <Grid>
+                          <TextBlock Text="{Binding Initial}" FontSize="17" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                          <Image Stretch="Uniform" Margin="4" RenderOptions.BitmapScalingMode="HighQuality">
+                            <Image.Source>
+                              <MultiBinding Converter="{StaticResource LibraryIconConverter}">
+                                <Binding Path="IconPath" />
+                                <Binding Path="ExecutablePath" />
+                              </MultiBinding>
+                            </Image.Source>
+                          </Image>
+                        </Grid>
                       </Border>
                       <StackPanel Grid.Column="1" Margin="8,0,12,0" VerticalAlignment="Center">
                         <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
@@ -480,6 +559,19 @@
                   </DataTemplate>
                 </ListBox.ItemTemplate>
               </ListBox>
+              <Border Grid.Row="1" Background="Transparent" Padding="24">
+                <Border.Style>
+                  <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Visible" />
+                    <Style.Triggers><DataTrigger Binding="{Binding HasVisibleItems}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers>
+                  </Style>
+                </Border.Style>
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="260">
+                  <Image Source="Assets/nexus-logo-512.png" Width="52" Height="52" Opacity="0.82" />
+                  <TextBlock Text="Nothing matches this view" FontSize="17" FontWeight="SemiBold" TextAlignment="Center" Margin="0,14,0,0" />
+                  <TextBlock Text="Try another search or category, rescan, or add an executable." Foreground="{DynamicResource NexusMutedText}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,7,0,0" />
+                </StackPanel>
+              </Border>
             </Grid>
           </Border>
 
@@ -533,27 +625,56 @@
                           </Border.Background>
                         </Border>
                         <Ellipse Width="170" Height="170" Fill="#38FFFFFF" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-82,-55,0" />
-                        <Border Width="62" Height="62" CornerRadius="18" Background="#D9212745" Margin="18" HorizontalAlignment="Left" VerticalAlignment="Bottom">
-                          <TextBlock Text="{Binding Initial}" FontSize="27" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <Border Width="62" Height="62" CornerRadius="18" Background="#D9212745" Margin="18" HorizontalAlignment="Left" VerticalAlignment="Bottom" ClipToBounds="True">
+                          <Grid>
+                            <TextBlock Text="{Binding Initial}" FontSize="27" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Image Stretch="Uniform" Margin="6" RenderOptions.BitmapScalingMode="HighQuality">
+                              <Image.Source>
+                                <MultiBinding Converter="{StaticResource LibraryIconConverter}">
+                                  <Binding Path="IconPath" />
+                                  <Binding Path="ExecutablePath" />
+                                </MultiBinding>
+                              </Image.Source>
+                            </Image>
+                          </Grid>
                         </Border>
                       </Grid>
                     </Border>
                     <TextBlock Text="{Binding Name}" FontSize="24" FontWeight="SemiBold" TextWrapping="Wrap" />
                     <TextBlock Text="{Binding DisplayProvider}" Foreground="{DynamicResource NexusMutedText}" Margin="0,5,0,20" />
-                    <Button Content="Launch" Style="{StaticResource AccentButton}" Command="{Binding DataContext.LaunchCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Margin="0,0,0,9" />
-                    <Button Content="Open installation folder" Style="{StaticResource QuietButton}" Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Margin="0,0,0,20" />
-                    <Border Height="1" Background="#2D3A52" Margin="0,0,0,18" />
+                    <Button Style="{StaticResource AccentButton}" Command="{Binding DataContext.LaunchCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Margin="0,0,0,9" AutomationProperties.Name="Launch selected item">
+                      <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE768;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,7,0" /><TextBlock Text="Launch" /></StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource QuietButton}" Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Margin="0,0,0,20" AutomationProperties.Name="Open installation folder">
+                      <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8B7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,7,0" /><TextBlock Text="Open installation folder" /></StackPanel>
+                    </Button>
+                    <Border Height="1" Background="{DynamicResource NexusBorder}" Margin="0,0,0,18" />
                     <TextBlock Text="DETAILS" Style="{StaticResource Eyebrow}" />
-                    <TextBlock Text="{Binding CategoryLabel}" Margin="0,9,0,0" />
-                    <TextBlock Text="{Binding Publisher}" Foreground="{DynamicResource NexusMutedText}" Margin="0,5,0,0" TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding Version}" Foreground="{DynamicResource NexusMutedText}" Margin="0,5,0,0" />
-                    <TextBlock Text="{Binding Description}" Foreground="{DynamicResource NexusMutedText}" FontSize="12" Margin="0,9,0,0" TextWrapping="Wrap" MaxHeight="70" TextTrimming="WordEllipsis" />
-                    <TextBlock Text="{Binding InstallPath}" Foreground="{DynamicResource NexusMutedText}" FontSize="11" Margin="0,6,0,18" TextWrapping="Wrap" />
+                    <Grid Margin="0,11,0,17">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                      </Grid.ColumnDefinitions>
+                      <StackPanel Margin="0,0,10,0">
+                        <TextBlock Text="CATEGORY" Style="{StaticResource Eyebrow}" Foreground="{DynamicResource NexusMutedText}" />
+                        <TextBlock Text="{Binding CategoryLabel}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                      </StackPanel>
+                      <StackPanel Grid.Column="1">
+                        <TextBlock Text="VERSION" Style="{StaticResource Eyebrow}" Foreground="{DynamicResource NexusMutedText}" />
+                        <TextBlock Text="{Binding VersionDisplay}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                      </StackPanel>
+                    </Grid>
+                    <TextBlock Text="PUBLISHER" Style="{StaticResource Eyebrow}" Foreground="{DynamicResource NexusMutedText}" />
+                    <TextBlock Text="{Binding PublisherDisplay}" Margin="0,4,0,15" TextWrapping="Wrap" />
+                    <TextBlock Text="DESCRIPTION" Style="{StaticResource Eyebrow}" Foreground="{DynamicResource NexusMutedText}" />
+                    <TextBlock Text="{Binding DescriptionDisplay}" Foreground="{DynamicResource NexusMutedText}" FontSize="12" Margin="0,5,0,15" TextWrapping="Wrap" MaxHeight="84" TextTrimming="WordEllipsis" />
+                    <TextBlock Text="INSTALLATION" Style="{StaticResource Eyebrow}" Foreground="{DynamicResource NexusMutedText}" />
+                    <TextBlock Text="{Binding InstallLocationDisplay}" Foreground="{DynamicResource NexusMutedText}" FontSize="11" Margin="0,5,0,18" TextWrapping="Wrap" />
                     <WrapPanel>
-                      <Button Content="Favorite" Command="{Binding DataContext.ToggleFavoriteCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Style="{StaticResource QuietButton}" Margin="0,0,8,8" />
-                      <Button Content="AI metadata" Command="{Binding DataContext.AiMetadataCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Style="{StaticResource QuietButton}" ToolTip="Enable AI metadata and connect to Nexus AI in Settings, then review suggestions before applying them." Margin="0,0,8,8" />
-                      <Button Content="Hide" Command="{Binding DataContext.HideCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Style="{StaticResource QuietButton}" Margin="0,0,8,8" />
-                      <Button Content="Remove" Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Background="#2F672C3A" BorderBrush="#A26D4050" Margin="0,0,0,8" />
+                      <Button Command="{Binding DataContext.ToggleFavoriteCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Style="{StaticResource QuietButton}" Margin="0,0,8,8" AutomationProperties.Name="{Binding FavoriteActionLabel}"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE734;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,6,0" /><TextBlock Text="{Binding FavoriteActionLabel}" /></StackPanel></Button>
+                      <Button Command="{Binding DataContext.AiMetadataCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Style="{StaticResource QuietButton}" ToolTip="Enable metadata intelligence in Settings, choose On-device AI or Nexus Cloud, then review suggestions before applying them." AutomationProperties.Name="Request metadata suggestion" Margin="0,0,8,8"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE7C3;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,6,0" /><TextBlock Text="AI metadata" /></StackPanel></Button>
+                      <Button Command="{Binding DataContext.HideCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Style="{StaticResource QuietButton}" Margin="0,0,8,8" AutomationProperties.Name="{Binding VisibilityActionLabel}"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE890;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,6,0" /><TextBlock Text="{Binding VisibilityActionLabel}" /></StackPanel></Button>
+                      <Button Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Background="{DynamicResource NexusDangerSurface}" BorderBrush="{DynamicResource NexusDangerBorder}" Margin="0,0,0,8" AutomationProperties.Name="Remove from Nexus"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE74D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,6,0" /><TextBlock Text="Remove" /></StackPanel></Button>
                     </WrapPanel>
                   </StackPanel>
                 </DataTemplate>
@@ -563,12 +684,15 @@
             </Grid>
           </Border>
         </Grid>
-        <TextBlock Grid.Row="3" Text="{Binding Status}" Foreground="{DynamicResource NexusMutedText}" FontSize="12" Margin="2,14,0,0" TextTrimming="CharacterEllipsis" />
+        <TextBlock Grid.Row="3" Text="{Binding Status}" Foreground="{DynamicResource NexusMutedText}" FontSize="12" Margin="2,14,0,0" TextTrimming="CharacterEllipsis" AutomationProperties.Name="{Binding Status}" AutomationProperties.LiveSetting="Polite" />
       </Grid>
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:StoreViewModel}">
-      <Grid Margin="38,32,38,36">
+      <ScrollViewer VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled"
+                    PanningMode="VerticalFirst">
+      <Grid Margin="30,26,30,30" MinHeight="650">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
           <RowDefinition Height="Auto" />
@@ -582,6 +706,7 @@
           <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource NexusMutedText}" Margin="0,7,0,0" />
           <Border Height="112" Margin="0,22,0,0" CornerRadius="18" ClipToBounds="True" BorderBrush="#5A7B6CFF" BorderThickness="1">
             <Grid>
+              <Border Background="#11182B" />
               <Border>
                 <Border.Background>
                   <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
@@ -617,11 +742,11 @@
               <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <ComboBox ItemsSource="{Binding SearchScopes}" SelectedItem="{Binding SelectedScope}" VerticalContentAlignment="Center" />
-            <Border Grid.Column="1" Height="44" Margin="12,0,0,0" Background="#121722" BorderBrush="#354057" BorderThickness="1" CornerRadius="11">
+            <ComboBox ItemsSource="{Binding SearchScopes}" SelectedItem="{Binding SelectedScope}" VerticalContentAlignment="Center" AutomationProperties.Name="Store search scope" />
+            <Border Grid.Column="1" Height="44" Margin="12,0,0,0" Style="{StaticResource SearchFieldBorder}" CornerRadius="11">
               <Grid>
                 <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Foreground="{DynamicResource NexusMutedText}" FontSize="15" Margin="14,0,0,0" VerticalAlignment="Center" />
-                <TextBox Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" ToolTip="{Binding SearchPlaceholder}" BorderThickness="0" Background="Transparent" Padding="38,7,12,7" VerticalContentAlignment="Center">
+                <TextBox Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" ToolTip="{Binding SearchPlaceholder}" AutomationProperties.Name="{Binding SearchPlaceholder}" BorderThickness="0" Background="Transparent" Padding="38,7,12,7" VerticalContentAlignment="Center">
                   <TextBox.InputBindings>
                     <KeyBinding Key="Enter" Command="{Binding SearchCommand}" />
                   </TextBox.InputBindings>
@@ -644,11 +769,11 @@
                 </TextBlock>
               </Grid>
             </Border>
-            <Button Grid.Column="2" Content="{Binding SearchButtonText}" Style="{StaticResource AccentButton}" Command="{Binding SearchCommand}" Margin="12,0,0,0" />
+            <Button Grid.Column="2" Style="{StaticResource AccentButton}" Command="{Binding SearchCommand}" Margin="12,0,0,0" AutomationProperties.Name="{Binding SearchButtonText}"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,7,0" /><TextBlock Text="{Binding SearchButtonText}" /></StackPanel></Button>
           </Grid>
         </Border>
 
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="2" MinHeight="260" MaxHeight="360">
           <Border Padding="28" VerticalAlignment="Top">
             <Border.Style>
               <Style TargetType="Border" BasedOn="{StaticResource Card}">
@@ -689,10 +814,12 @@
                       <ColumnDefinition Width="*" />
                       <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <Border Width="88" Height="54" CornerRadius="10" Background="#2B283E71" ClipToBounds="True" VerticalAlignment="Center">
+                    <Border Width="88" Height="54" CornerRadius="10" Background="{DynamicResource NexusSelected}" ClipToBounds="True" VerticalAlignment="Center">
                       <Grid>
-                        <TextBlock Text="&#xE7FC;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="20" Foreground="#DDE5FFFF" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        <Image Source="{Binding ImageUrl}" Stretch="UniformToFill" />
+                        <Image Source="Assets/nexus-cover-fallback.png" Stretch="UniformToFill" Opacity="0.78" />
+                        <infra:SafeRemoteImage Url="{Binding ImageUrl}"
+                                               Stretch="UniformToFill"
+                                               RenderOptions.BitmapScalingMode="HighQuality" />
                       </Grid>
                     </Border>
                     <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
@@ -724,17 +851,18 @@
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
           <StackPanel VerticalAlignment="Center">
-            <TextBlock Text="{Binding Status}" Foreground="{DynamicResource NexusMutedText}" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding Status}" Foreground="{DynamicResource NexusMutedText}" TextWrapping="Wrap" AutomationProperties.Name="{Binding Status}" AutomationProperties.LiveSetting="Polite" />
             <TextBlock Text="Steam applies its own account, regional, and age checks after Nexus opens the official page." Foreground="{DynamicResource NexusMutedText}" FontSize="11" Margin="0,4,0,0" />
           </StackPanel>
-          <Button Grid.Column="1" Content="{Binding PrimaryActionLabel}" Command="{Binding PrimaryActionCommand}" Style="{StaticResource AccentButton}" Margin="18,0,0,0" VerticalAlignment="Center" />
+          <Button Grid.Column="1" Command="{Binding PrimaryActionCommand}" Style="{StaticResource AccentButton}" Margin="18,0,0,0" VerticalAlignment="Center" AutomationProperties.Name="{Binding PrimaryActionLabel}"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8A7;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,7,0" /><TextBlock Text="{Binding PrimaryActionLabel}" /></StackPanel></Button>
         </Grid>
       </Grid>
+      </ScrollViewer>
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:ModsViewModel}">
       <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="38,32,38,38" MaxWidth="900" HorizontalAlignment="Left">
+        <StackPanel Margin="30,26,30,30" MaxWidth="900" HorizontalAlignment="Left">
           <TextBlock Text="LOCAL MODS" Style="{StaticResource Eyebrow}" />
           <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" Margin="0,7,0,0" />
           <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource NexusMutedText}" Margin="0,7,0,26" />
@@ -750,15 +878,15 @@
                          LineHeight="22"
                          Margin="0,8,0,22" />
               <TextBlock Text="Game" Style="{StaticResource Eyebrow}" />
-              <ComboBox ItemsSource="{Binding Games}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedGame}" Margin="0,7,0,14" />
-              <Border Background="#142A3448" BorderBrush="#2D3A52" BorderThickness="1" CornerRadius="10" Padding="13,10" Margin="0,0,0,18">
+              <ComboBox ItemsSource="{Binding Games}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedGame}" Margin="0,7,0,14" AutomationProperties.Name="Game for mod import" />
+              <Border Background="{DynamicResource NexusHover}" BorderBrush="{DynamicResource NexusBorder}" BorderThickness="1" CornerRadius="10" Padding="13,10" Margin="0,0,0,18">
                 <TextBlock Text="{Binding ModFolder}" Foreground="{DynamicResource NexusMutedText}" TextWrapping="Wrap" />
               </Border>
               <WrapPanel>
                 <Button Content="Import ZIP archive" Style="{StaticResource AccentButton}" Command="{Binding ImportZipCommand}" Margin="0,0,10,0" />
                 <Button Content="Open Mods folder" Style="{StaticResource QuietButton}" Command="{Binding OpenFolderCommand}" />
               </WrapPanel>
-              <TextBlock Text="{Binding Status}" Foreground="{DynamicResource NexusMutedText}" Margin="0,18,0,0" TextWrapping="Wrap" />
+              <TextBlock Text="{Binding Status}" Foreground="{DynamicResource NexusMutedText}" Margin="0,18,0,0" TextWrapping="Wrap" AutomationProperties.Name="{Binding Status}" AutomationProperties.LiveSetting="Polite" />
             </StackPanel>
           </Border>
         </StackPanel>
@@ -766,7 +894,7 @@
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:CollectionsViewModel}">
-      <Grid Margin="38,32,38,36">
+      <Grid Margin="30,26,30,30">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
           <RowDefinition Height="Auto" />
@@ -777,9 +905,20 @@
           <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" Margin="0,7,0,0" />
           <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource NexusMutedText}" Margin="0,7,0,0" />
         </StackPanel>
-        <ComboBox Grid.Row="1" ItemsSource="{Binding Collections}" SelectedItem="{Binding SelectedCollection}" Width="220" HorizontalAlignment="Left" Margin="0,24,0,18" />
+        <ComboBox Grid.Row="1" ItemsSource="{Binding Collections}" SelectedItem="{Binding SelectedCollection}" Width="220" HorizontalAlignment="Left" Margin="0,24,0,18" AutomationProperties.Name="Collection view" />
         <Border Grid.Row="2" Style="{StaticResource Card}" Padding="8">
-          <ListBox ItemsSource="{Binding Items}" ItemContainerStyle="{StaticResource LibraryItemContainer}">
+          <Grid>
+          <ListBox ItemsSource="{Binding Items}" ItemContainerStyle="{StaticResource LibraryItemContainer}" AutomationProperties.Name="Collection items">
+            <ListBox.Style>
+              <Style TargetType="ListBox" BasedOn="{StaticResource {x:Type ListBox}}">
+                <Setter Property="Visibility" Value="Collapsed" />
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding HasItems}" Value="True">
+                    <Setter Property="Visibility" Value="Visible" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </ListBox.Style>
             <ListBox.ItemTemplate>
               <DataTemplate DataType="{x:Type models:LibraryItem}">
                 <Grid>
@@ -788,8 +927,18 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                   </Grid.ColumnDefinitions>
-                  <Border Width="38" Height="38" CornerRadius="12" Background="#217B6CFF">
-                    <TextBlock Text="{Binding Initial}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  <Border Width="38" Height="38" CornerRadius="12" Background="#217B6CFF" ClipToBounds="True">
+                    <Grid>
+                      <TextBlock Text="{Binding Initial}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                      <Image Stretch="Uniform" Margin="4" RenderOptions.BitmapScalingMode="HighQuality">
+                        <Image.Source>
+                          <MultiBinding Converter="{StaticResource LibraryIconConverter}">
+                            <Binding Path="IconPath" />
+                            <Binding Path="ExecutablePath" />
+                          </MultiBinding>
+                        </Image.Source>
+                      </Image>
+                    </Grid>
                   </Border>
                   <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center">
                     <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
@@ -800,13 +949,40 @@
               </DataTemplate>
             </ListBox.ItemTemplate>
           </ListBox>
+          <Border Padding="28">
+            <Border.Style>
+              <Style TargetType="Border">
+                <Setter Property="Visibility" Value="Visible" />
+                <Style.Triggers>
+                  <DataTrigger Binding="{Binding HasItems}" Value="True">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                  </DataTrigger>
+                </Style.Triggers>
+              </Style>
+            </Border.Style>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="470">
+              <Border Width="52" Height="52" Background="#267B6CFF" CornerRadius="16" HorizontalAlignment="Center">
+                <TextBlock Text="&#xE734;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="21" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              </Border>
+              <TextBlock Text="{Binding EmptyStateTitle}" Style="{StaticResource SectionTitle}" HorizontalAlignment="Center" Margin="0,17,0,0" />
+              <TextBlock Text="{Binding EmptyStateText}"
+                         Foreground="{DynamicResource NexusMutedText}"
+                         TextAlignment="Center"
+                         TextWrapping="Wrap"
+                         LineHeight="21"
+                         Margin="0,7,0,0"
+                         AutomationProperties.Name="{Binding EmptyStateText}"
+                         AutomationProperties.LiveSetting="Polite" />
+            </StackPanel>
+          </Border>
+          </Grid>
         </Border>
       </Grid>
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:CloudViewModel}">
       <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="38,32,38,38" MaxWidth="900" HorizontalAlignment="Left">
+        <StackPanel Margin="30,26,30,30" MaxWidth="900" HorizontalAlignment="Left">
           <TextBlock Text="BACKUP AND RESTORE" Style="{StaticResource Eyebrow}" />
           <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" Margin="0,7,0,0" />
           <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource NexusMutedText}" Margin="0,7,0,26" />
@@ -825,7 +1001,7 @@
                 <Button Content="Export backup" Style="{StaticResource AccentButton}" Command="{Binding ExportCommand}" Margin="0,0,10,0" />
                 <Button Content="Restore backup" Style="{StaticResource QuietButton}" Command="{Binding RestoreCommand}" />
               </WrapPanel>
-              <TextBlock Text="{Binding Status}" Foreground="{DynamicResource NexusMutedText}" Margin="0,18,0,0" TextWrapping="Wrap" />
+              <TextBlock Text="{Binding Status}" Foreground="{DynamicResource NexusMutedText}" Margin="0,18,0,0" TextWrapping="Wrap" AutomationProperties.Name="{Binding Status}" AutomationProperties.LiveSetting="Polite" />
             </StackPanel>
           </Border>
         </StackPanel>
@@ -834,7 +1010,7 @@
 
     <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
       <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="38,32,38,38" MaxWidth="920" HorizontalAlignment="Left">
+        <StackPanel Margin="30,26,30,30" MaxWidth="920" HorizontalAlignment="Left">
           <TextBlock Text="PREFERENCES" Style="{StaticResource Eyebrow}" />
           <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" Margin="0,7,0,0" />
           <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource NexusMutedText}" Margin="0,7,0,26" />
@@ -842,7 +1018,7 @@
             <StackPanel>
               <TextBlock Text="Appearance" Style="{StaticResource SectionTitle}" />
               <TextBlock Text="Choose how Nexus follows your desktop theme." Foreground="{DynamicResource NexusMutedText}" Margin="0,7,0,15" />
-              <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" Width="180" HorizontalAlignment="Left" />
+              <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" Width="180" HorizontalAlignment="Left" AutomationProperties.Name="Application theme" />
             </StackPanel>
           </Border>
           <Border Style="{StaticResource Card}" Margin="0,0,0,14">
@@ -852,7 +1028,7 @@
               <CheckBox Content="Check registered Windows applications" IsChecked="{Binding IncludeInstalledApplications}" Margin="0,5,0,5" />
               <CheckBox Content="Check Start menu shortcuts" IsChecked="{Binding IncludeStartMenuShortcuts}" Margin="0,5,0,15" />
               <TextBlock Text="EXTRA SCAN FOLDERS" Style="{StaticResource Eyebrow}" />
-              <ListBox ItemsSource="{Binding ScanFolders}" SelectedItem="{Binding SelectedScanFolder}" MaxHeight="120" Margin="0,8,0,12">
+              <ListBox ItemsSource="{Binding ScanFolders}" SelectedItem="{Binding SelectedScanFolder}" MaxHeight="120" Margin="0,8,0,12" AutomationProperties.Name="Extra scan folders">
                 <ListBox.ItemTemplate>
                   <DataTemplate>
                     <TextBlock Text="{Binding}" Foreground="{DynamicResource NexusMutedText}" Padding="8,5" TextTrimming="CharacterEllipsis" />
@@ -868,7 +1044,7 @@
           <Border Style="{StaticResource Card}" Margin="0,0,0,14">
             <StackPanel>
               <TextBlock Text="Privacy" Style="{StaticResource SectionTitle}" />
-              <TextBlock Text="Nexus stays local-first. Library scanning and launching do not need an account or an online service. If you turn on Nexus AI, it only sends the selected item's title, provider, publisher, version, executable filename, and parent-folder name after you explicitly request a suggestion."
+              <TextBlock Text="Nexus stays local-first. Library scanning and launching do not need an account or online service. On-device metadata intelligence runs in an isolated local Ollama process with cloud access disabled. Nexus Cloud sends only a minimized metadata request after you explicitly select that provider and request a suggestion."
                          Foreground="{DynamicResource NexusMutedText}"
                          TextWrapping="Wrap"
                          LineHeight="22"
@@ -877,29 +1053,99 @@
           </Border>
           <Border Style="{StaticResource Card}" Margin="0,0,0,14">
             <StackPanel>
-              <TextBlock Text="Nexus AI" Style="{StaticResource SectionTitle}" />
-              <TextBlock Text="AI metadata is optional. Nexus uses a secure OAuth connection to a developer-owned Nexus AI gateway; it never asks for or stores an OpenAI API key in the launcher. Suggestions are reviewable and cannot change launch settings."
+              <StackPanel Orientation="Horizontal">
+                <Border Width="42" Height="42" Background="#267B6CFF" CornerRadius="13" Margin="0,0,13,0">
+                  <TextBlock Text="&#xE7C3;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <StackPanel VerticalAlignment="Center">
+                  <TextBlock Text="Metadata intelligence" Style="{StaticResource SectionTitle}" />
+                  <TextBlock Text="Private by default · review before apply" Foreground="{DynamicResource NexusMutedText}" FontSize="11" Margin="0,3,0,0" />
+                </StackPanel>
+              </StackPanel>
+              <TextBlock Text="Choose exactly one provider. Nexus never silently falls back between on-device and cloud processing, never embeds an OpenAI API key, and never lets a suggestion change launch settings."
                          Foreground="{DynamicResource NexusMutedText}"
                          TextWrapping="Wrap"
                          LineHeight="22"
-                         Margin="0,7,0,13" />
-              <CheckBox Content="Enable optional AI metadata suggestions" IsChecked="{Binding EnableAiMetadata}" Margin="0,2,0,14" />
-              <Grid Margin="0,0,0,14">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="Auto" />
-                  <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
+                         Margin="0,12,0,15" />
+              <CheckBox Content="Enable metadata intelligence" IsChecked="{Binding EnableAiMetadata}" Margin="0,0,0,16" />
+
+              <TextBlock Text="PROVIDER" Style="{StaticResource Eyebrow}" />
+              <ComboBox ItemsSource="{Binding AiProviders}"
+                        SelectedItem="{Binding SelectedAiProvider}"
+                        DisplayMemberPath="Name"
+                        AutomationProperties.Name="Metadata provider"
+                        Margin="0,7,0,5" />
+              <TextBlock Text="{Binding SelectedAiProvider.Summary}" Foreground="{DynamicResource NexusMutedText}" TextWrapping="Wrap" Margin="1,0,0,16" />
+
+              <Border Background="{DynamicResource NexusHover}"
+                      BorderBrush="{DynamicResource NexusBorder}"
+                      BorderThickness="1"
+                      CornerRadius="12"
+                      Padding="15"
+                      Margin="0,0,0,14"
+                      Visibility="{Binding IsLocalAiProvider, Converter={StaticResource BoolToVisibility}}">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <StackPanel>
+                    <TextBlock Text="ON-DEVICE GUARANTEES" Style="{StaticResource Eyebrow}" />
+                    <TextBlock Text="Nexus launches its own loopback-only Ollama process, disables Ollama Cloud, uses compatible downloaded text-generation models only, and never enables tools or web access."
+                               Foreground="{DynamicResource NexusMutedText}"
+                               TextWrapping="Wrap"
+                               MaxWidth="640"
+                               Margin="0,6,16,0" />
+                  </StackPanel>
+                  <Button Grid.Column="1" Command="{Binding OpenLocalAiSetupCommand}" Style="{StaticResource QuietButton}" VerticalAlignment="Center" AutomationProperties.Name="Get Ollama from the official site">
+                    <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE896;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,7,0" /><TextBlock Text="Get Ollama" /></StackPanel>
+                  </Button>
+                </Grid>
+              </Border>
+
+              <Border Background="{DynamicResource NexusHover}"
+                      BorderBrush="{DynamicResource NexusBorder}"
+                      BorderThickness="1"
+                      CornerRadius="12"
+                      Padding="15"
+                      Margin="0,0,0,14"
+                      Visibility="{Binding IsCloudAiProvider, Converter={StaticResource BoolToVisibility}}">
                 <StackPanel>
-                  <TextBlock Text="MONTHLY REQUEST LIMIT" Style="{StaticResource Eyebrow}" />
-                  <ComboBox ItemsSource="{Binding AiRequestLimits}" SelectedItem="{Binding AiMonthlyRequestLimit}" Width="110" Margin="0,7,0,0" />
+                  <TextBlock Text="NEXUS CLOUD" Style="{StaticResource Eyebrow}" />
+                  <TextBlock Text="This optional provider appears only when a maintainer configures a trusted Nexus OAuth gateway. It is a Nexus sign-in, not an OpenAI account sign-in."
+                             Foreground="{DynamicResource NexusMutedText}"
+                             TextWrapping="Wrap"
+                             Margin="0,6,0,13" />
+                  <Grid Margin="0,0,0,13">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto" />
+                      <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                      <TextBlock Text="MONTHLY REQUEST LIMIT" Style="{StaticResource Eyebrow}" />
+                      <ComboBox ItemsSource="{Binding AiRequestLimits}" SelectedItem="{Binding AiMonthlyRequestLimit}" Width="110" Margin="0,7,0,0" AutomationProperties.Name="AI monthly request limit" />
+                    </StackPanel>
+                    <TextBlock Grid.Column="1" Text="{Binding AiUsageDescription}" Foreground="{DynamicResource NexusMutedText}" VerticalAlignment="Bottom" Margin="18,0,0,2" />
+                  </Grid>
+                  <WrapPanel>
+                    <Button Command="{Binding ConnectAiCommand}" Style="{StaticResource AccentButton}" Margin="0,0,10,0" AutomationProperties.Name="Connect Nexus Cloud"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE77B;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,7,0" /><TextBlock Text="Connect Nexus Cloud" /></StackPanel></Button>
+                    <Button Command="{Binding DisconnectAiCommand}" Style="{StaticResource QuietButton}" AutomationProperties.Name="Disconnect Nexus Cloud"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8AC;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,7,0" /><TextBlock Text="Disconnect" /></StackPanel></Button>
+                  </WrapPanel>
                 </StackPanel>
-                <TextBlock Grid.Column="1" Text="{Binding AiUsageDescription}" Foreground="{DynamicResource NexusMutedText}" VerticalAlignment="Bottom" Margin="18,0,0,2" />
-              </Grid>
-              <WrapPanel>
-                <Button Content="Connect to Nexus AI" Command="{Binding ConnectAiCommand}" Style="{StaticResource AccentButton}" Margin="0,0,10,0" />
-                <Button Content="Disconnect" Command="{Binding DisconnectAiCommand}" Style="{StaticResource QuietButton}" />
-              </WrapPanel>
-              <TextBlock Text="{Binding AiConnectionStatus}" Foreground="{DynamicResource NexusMutedText}" TextWrapping="Wrap" Margin="0,14,0,0" />
+              </Border>
+
+              <Border Background="{DynamicResource NexusSelected}" BorderBrush="{DynamicResource NexusBorderStrong}" BorderThickness="1" CornerRadius="12" Padding="14">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="30" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <TextBlock Text="&#xE946;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16" VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="1" Text="{Binding AiConnectionStatus}" TextWrapping="Wrap" VerticalAlignment="Center" Margin="4,0,14,0" AutomationProperties.Name="{Binding AiConnectionStatus}" AutomationProperties.LiveSetting="Polite" />
+                  <Button Grid.Column="2" Command="{Binding RefreshAiStatusCommand}" Style="{StaticResource QuietButton}" Padding="10,6" AutomationProperties.Name="Refresh metadata provider status"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,6,0" /><TextBlock Text="Refresh" /></StackPanel></Button>
+                </Grid>
+              </Border>
             </StackPanel>
           </Border>
           <Border Style="{StaticResource Card}">
@@ -910,7 +1156,7 @@
                 <Button Content="Open data folder" Command="{Binding OpenDataCommand}" Style="{StaticResource QuietButton}" Margin="0,0,10,0" />
                 <Button Content="Save settings" Style="{StaticResource AccentButton}" Command="{Binding SaveCommand}" />
               </WrapPanel>
-              <TextBlock Text="{Binding Status}" Foreground="{DynamicResource NexusMutedText}" Margin="0,14,0,0" />
+              <TextBlock Text="{Binding Status}" Foreground="{DynamicResource NexusMutedText}" Margin="0,14,0,0" AutomationProperties.Name="{Binding Status}" AutomationProperties.LiveSetting="Polite" />
             </StackPanel>
           </Border>
         </StackPanel>
@@ -918,14 +1164,14 @@
     </DataTemplate>
 
     <DataTemplate DataType="{x:Type vm:InfoPageViewModel}">
-      <StackPanel Margin="38,32,38,38" MaxWidth="820">
+      <StackPanel Margin="30,26,30,30" MaxWidth="820">
         <TextBlock Text="NEXUS" Style="{StaticResource Eyebrow}" />
         <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" Margin="0,7,0,0" />
         <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource NexusMutedText}" Margin="0,7,0,26" />
         <Border Style="{StaticResource Card}">
           <StackPanel>
             <Border Width="46" Height="46" Background="#217B6CFF" CornerRadius="14" HorizontalAlignment="Left">
-              <TextBlock Text="{Binding Glyph}" FontSize="20" Foreground="{DynamicResource NexusText}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              <TextBlock Text="{Binding Glyph}" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="20" Foreground="{DynamicResource NexusText}" HorizontalAlignment="Center" VerticalAlignment="Center" />
             </Border>
             <TextBlock Text="{Binding Heading}" FontSize="20" FontWeight="SemiBold" Margin="0,18,0,0" />
             <TextBlock Text="{Binding Body}" Foreground="{DynamicResource NexusMutedText}" TextWrapping="Wrap" LineHeight="23" Margin="0,9,0,0" />
@@ -935,13 +1181,13 @@
     </DataTemplate>
   </Window.Resources>
 
-  <Grid Background="{DynamicResource NexusBackground}">
+  <Grid Background="{DynamicResource NexusBackground}" SnapsToDevicePixels="True">
     <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="250" />
+      <ColumnDefinition Width="224" />
       <ColumnDefinition Width="*" />
     </Grid.ColumnDefinitions>
 
-    <Border Background="{DynamicResource NexusPanel}" BorderBrush="#26344C" BorderThickness="0,0,1,0">
+    <Border x:Name="SidebarShell" Background="{DynamicResource NexusSidebar}" BorderBrush="{DynamicResource NexusBorder}" BorderThickness="0,0,1,0">
       <Grid Margin="14,20,14,14">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
@@ -949,16 +1195,8 @@
           <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <StackPanel Orientation="Horizontal" Margin="9,0,7,25">
-          <Border Width="38" Height="38" CornerRadius="13" ClipToBounds="True">
-            <Border.Background>
-              <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#A78BFA" Offset="0" />
-                <GradientStop Color="#5B5AE6" Offset="1" />
-              </LinearGradientBrush>
-            </Border.Background>
-            <Viewbox Margin="9">
-              <Path Fill="White" Data="M 0,0 L 10,0 10,10 20,10 20,20 10,20 10,30 0,30 Z M 20,0 L 30,0 30,30 20,30 Z" />
-            </Viewbox>
+          <Border Width="38" Height="38" CornerRadius="12" ClipToBounds="True">
+            <Image Source="Assets/nexus-logo-512.png" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality" />
           </Border>
           <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
             <TextBlock Text="NEXUS" FontWeight="Bold" FontSize="17" />
@@ -997,7 +1235,7 @@
         </Grid>
 
         <StackPanel Grid.Row="2">
-          <Border Background="#15202A41" BorderBrush="#2F405A77" BorderThickness="1" CornerRadius="12" Padding="12" Margin="0,0,0,10">
+          <Border Background="{DynamicResource NexusHover}" BorderBrush="{DynamicResource NexusBorder}" BorderThickness="1" CornerRadius="12" Padding="12" Margin="0,0,0,10">
             <StackPanel>
               <TextBlock Text="LOCAL-FIRST" Style="{StaticResource Eyebrow}" />
               <TextBlock Text="No account. No tracking." Foreground="{DynamicResource NexusMutedText}" FontSize="11" Margin="0,4,0,0" />
@@ -1012,14 +1250,21 @@
       </Grid>
     </Border>
 
-    <Grid Grid.Column="1">
+    <Grid x:Name="ContentShell" Grid.Column="1">
       <Grid.RowDefinitions>
         <RowDefinition Height="68" />
         <RowDefinition Height="*" />
         <RowDefinition Height="32" />
       </Grid.RowDefinitions>
-      <Border Background="#1033425B" BorderBrush="#26344C" BorderThickness="0,0,0,1">
-        <Grid Margin="38,0">
+      <Image Grid.RowSpan="3"
+             Source="Assets/nexus-ambient.png"
+             Stretch="UniformToFill"
+             Opacity="0.11"
+             IsHitTestVisible="False"
+             RenderOptions.BitmapScalingMode="LowQuality"
+             CacheMode="BitmapCache" />
+      <Border Background="{DynamicResource NexusHeader}" BorderBrush="{DynamicResource NexusBorder}" BorderThickness="0,0,0,1">
+        <Grid Margin="30,0">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
@@ -1034,51 +1279,60 @@
             <Button Content="&#xE721;"
                     FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                     ToolTip="Open command palette"
+                    AutomationProperties.Name="Open command palette"
                     Command="{Binding OpenCommandPaletteCommand}"
                     Style="{StaticResource QuietButton}"
                     Padding="9,6"
                     Margin="0,0,9,0" />
-            <Button Content="Rescan"
-                    Command="{Binding ScanCommand}"
+            <Button Command="{Binding ScanCommand}"
                     Style="{StaticResource AccentButton}"
-                    Padding="14,7" />
+                    AutomationProperties.Name="Rescan library"
+                    Padding="14,7"><StackPanel Orientation="Horizontal"><TextBlock Text="&#xE72C;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Margin="0,0,7,0" /><TextBlock Text="Rescan" /></StackPanel></Button>
           </StackPanel>
         </Grid>
       </Border>
       <ContentControl Grid.Row="1" Content="{Binding CurrentPage}" />
-      <Border Grid.Row="2" Background="{DynamicResource NexusPanel}" BorderBrush="#26344C" BorderThickness="0,1,0,0" Padding="38,7">
+      <Border Grid.Row="2" Background="{DynamicResource NexusPanel}" BorderBrush="{DynamicResource NexusBorder}" BorderThickness="0,1,0,0" Padding="30,7">
         <Grid>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
           </Grid.ColumnDefinitions>
-          <TextBlock Text="{Binding GlobalStatus}" Foreground="{DynamicResource NexusMutedText}" FontSize="11" TextTrimming="CharacterEllipsis" />
+          <TextBlock Text="{Binding GlobalStatus}" Foreground="{DynamicResource NexusMutedText}" FontSize="11" TextTrimming="CharacterEllipsis" AutomationProperties.Name="{Binding GlobalStatus}" AutomationProperties.LiveSetting="Polite" />
           <TextBlock Grid.Column="1" Text="NEXUS · LOCAL MODE" Foreground="{DynamicResource NexusMutedText}" FontSize="10" FontWeight="SemiBold" />
         </Grid>
       </Border>
     </Grid>
 
     <Border Grid.ColumnSpan="2"
-            Background="#B80A0D14"
+            Background="{DynamicResource NexusScrim}"
             Visibility="{Binding IsCommandPaletteOpen, Converter={StaticResource BoolToVisibility}}">
-      <Grid HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,130,0,0" Width="640">
-        <Border Background="{DynamicResource NexusPanelRaised}" CornerRadius="18" Padding="14" BorderBrush="#61729A" BorderThickness="1">
+      <Grid x:Name="CommandPaletteDialog"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Top"
+            Margin="0,56,0,0"
+            Width="640"
+            FocusManager.IsFocusScope="True"
+            KeyboardNavigation.TabNavigation="Cycle"
+            AutomationProperties.Name="Command palette">
+        <Border Background="{DynamicResource NexusPanelRaised}" CornerRadius="18" Padding="14" BorderBrush="{DynamicResource NexusBorderStrong}" BorderThickness="1">
           <StackPanel>
             <Grid>
-              <Border Height="50" Background="{DynamicResource NexusPanel}" BorderBrush="#3B4C6B" BorderThickness="1" CornerRadius="12">
+              <Border Height="50" Background="{DynamicResource NexusPanel}" Style="{StaticResource SearchFieldBorder}" CornerRadius="12">
                 <Grid>
                   <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="46" />
                     <ColumnDefinition Width="*" />
                   </Grid.ColumnDefinitions>
                   <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Foreground="{DynamicResource NexusMutedText}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                  <TextBox Grid.Column="1" Text="{Binding CommandQuery, UpdateSourceTrigger=PropertyChanged}" FontSize="16" BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center" ToolTip="Search commands" />
+                  <TextBox x:Name="CommandPaletteSearchBox" Grid.Column="1" Text="{Binding CommandQuery, UpdateSourceTrigger=PropertyChanged}" FontSize="16" BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center" ToolTip="Search commands" AutomationProperties.Name="Search commands" />
                 </Grid>
               </Border>
               <Button Content="&#xE711;"
                       FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
                       Command="{Binding CloseCommandPaletteCommand}"
                       Style="{StaticResource QuietButton}"
+                      AutomationProperties.Name="Close command palette"
                       HorizontalAlignment="Right"
                       VerticalAlignment="Center"
                       Margin="0,0,8,0"
@@ -1086,10 +1340,10 @@
                       BorderThickness="0" />
             </Grid>
             <TextBlock Text="COMMANDS" Style="{StaticResource Eyebrow}" Margin="8,16,0,6" />
-            <ListBox ItemsSource="{Binding FilteredPaletteCommands}" BorderThickness="0" MaxHeight="360">
+            <ListBox ItemsSource="{Binding FilteredPaletteCommands}" BorderThickness="0" MaxHeight="270" ScrollViewer.VerticalScrollBarVisibility="Auto">
               <ListBox.ItemTemplate>
                 <DataTemplate DataType="{x:Type infra:PaletteCommand}">
-                  <Button Command="{Binding Command}" Background="Transparent" BorderBrush="Transparent" HorizontalContentAlignment="Stretch" Padding="14,11">
+                  <Button Command="{Binding Command}" Background="Transparent" BorderBrush="Transparent" HorizontalContentAlignment="Stretch" Padding="14,11" AutomationProperties.Name="{Binding Name}">
                     <StackPanel>
                       <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
                       <TextBlock Text="{Binding Description}" Foreground="{DynamicResource NexusMutedText}" FontSize="12" Margin="0,4,0,0" />
@@ -1104,16 +1358,20 @@
     </Border>
 
     <Border Grid.ColumnSpan="2"
-            Background="#DD0A0D14"
+            Background="{DynamicResource NexusScrim}"
             Visibility="{Binding IsOnboardingOpen, Converter={StaticResource BoolToVisibility}}">
-      <Border Background="{DynamicResource NexusPanelRaised}"
+      <Border x:Name="OnboardingDialog"
+              Background="{DynamicResource NexusPanelRaised}"
               Width="650"
               Padding="42"
               CornerRadius="22"
-              BorderBrush="#64769F"
+              BorderBrush="{DynamicResource NexusBorderStrong}"
               BorderThickness="1"
               HorizontalAlignment="Center"
-              VerticalAlignment="Center">
+              VerticalAlignment="Center"
+              FocusManager.IsFocusScope="True"
+              KeyboardNavigation.TabNavigation="Cycle"
+              AutomationProperties.Name="Nexus first-run setup">
         <StackPanel>
           <Border Style="{StaticResource SmallPill}" HorizontalAlignment="Left" Background="#197B6CFF" BorderBrush="#4E9A8CFF">
             <TextBlock Text="NEXUS · FIRST RUN" FontSize="10" FontWeight="Bold" />
@@ -1126,12 +1384,12 @@
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel Orientation="Horizontal">
-              <Button Content="Back" Command="{Binding PreviousOnboardingCommand}" Style="{StaticResource QuietButton}" Margin="0,0,10,0" />
+              <Button Content="Back" Command="{Binding PreviousOnboardingCommand}" Style="{StaticResource QuietButton}" Margin="0,0,10,0" Visibility="{Binding CanGoBack, Converter={StaticResource BoolToVisibility}}" />
               <TextBlock Text="{Binding OnboardingStep, StringFormat=Step {0} of 3}" Foreground="{DynamicResource NexusMutedText}" VerticalAlignment="Center" FontSize="12" />
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal">
-              <Button Content="Next" Command="{Binding NextOnboardingCommand}" Style="{StaticResource QuietButton}" Margin="0,0,10,0" />
-              <Button Content="Start Nexus" Style="{StaticResource AccentButton}" Command="{Binding FinishOnboardingCommand}" />
+              <Button x:Name="OnboardingNextButton" Content="Next" Command="{Binding NextOnboardingCommand}" Style="{StaticResource AccentButton}" Margin="0,0,10,0" Visibility="{Binding CanGoNext, Converter={StaticResource BoolToVisibility}}" />
+              <Button x:Name="OnboardingStartButton" Content="Start Nexus" Style="{StaticResource AccentButton}" Command="{Binding FinishOnboardingCommand}" Visibility="{Binding CanFinishOnboarding, Converter={StaticResource BoolToVisibility}}" />
             </StackPanel>
           </Grid>
         </StackPanel>

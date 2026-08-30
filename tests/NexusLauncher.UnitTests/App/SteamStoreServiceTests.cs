@@ -107,7 +107,7 @@ public sealed class SteamStoreServiceTests
         Assert.NotNull(successHandler.RequestUri);
         Assert.Equal("/api/storesearch/", successHandler.RequestUri!.AbsolutePath);
         Assert.Equal("?term=Hades&l=english&cc=gb", successHandler.RequestUri.Query);
-        Assert.Equal("NexusLauncher/0.2", successHandler.UserAgent);
+        Assert.Equal("NexusLauncher/1.0", successHandler.UserAgent);
 
         var unavailableHandler = new StaticResponseHandler(HttpStatusCode.TooManyRequests, "{}");
         using var unavailableClient = new HttpClient(unavailableHandler);

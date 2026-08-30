@@ -16,7 +16,7 @@ The definition should provide sensible local-development defaults for `MyAppVers
 Build locally with:
 
 ```powershell
-.\scripts\Package.ps1 -Version 0.1.0 -RequireInstaller
+.\scripts\Package.ps1 -Version 1.0.0 -RequireInstaller
 ```
 
 Do not commit compiled setup executables or the `installer/output/` directory.

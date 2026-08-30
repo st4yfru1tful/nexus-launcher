@@ -12,7 +12,7 @@ body:
     attributes:
       label: Nexus version or commit
       description: Include the version shown in About or a commit SHA.
-      placeholder: v0.1.0
+      placeholder: v1.0.0
     validations:
       required: true
   - type: input

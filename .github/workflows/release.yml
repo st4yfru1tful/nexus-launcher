@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing tag to release (for example, v0.1.0)
+        description: Existing tag to release (for example, v1.0.0)
         required: true
         type: string
 
@@ -83,14 +83,16 @@ jobs:
               "## What's included",
               '',
               '- Local-first game and application library for Windows.',
-              '- Steam, Windows Registry, Start menu, and user-selected-folder discovery, plus live Steam Store game search with official-page handoff.',
+              '- Steam, Windows Registry, Start menu, and user-selected-folder discovery, plus live Steam Store and WinGet search with explicit provider handoffs.',
               '- Manual executable additions, safe launch handoff, favorites, local removal, WinGet search/install handoff, local backup, and safe ZIP mod import.',
-              '- Optional Nexus AI metadata-suggestion client with OAuth + PKCE support for a developer-operated gateway; no OpenAI API key is stored in the launcher.',
+              '- Optional review-before-apply metadata suggestions using an isolated on-device Ollama process and already-downloaded local models.',
+              '- Optional OAuth + PKCE client for an externally configured, developer-operated Nexus Cloud gateway; no hosted gateway or OpenAI credential is bundled.',
+              '- Packaged Nexus branding, application/installer icons, local executable icons, and built-in visual fallbacks.',
               '- Self-contained x64 installer and portable ZIP with SHA-256 checksums.',
               '',
               '## Notes',
               '',
-              'This is an early prerelease. The portable ZIP keeps its data beside the extracted app; the installer uses the normal per-user local data directory. Steam search queries the Steam storefront and opens only its official pages. AI metadata stays disabled until a developer configures the required Nexus gateway and OAuth service; this public build has no hosted gateway. The binaries are unsigned.',
+              'The portable ZIP keeps its data beside the extracted app; the installer uses the normal per-user local data directory. Steam search queries the Steam storefront and opens only its official pages. On-device AI requires a separately installed Ollama runtime and an already-downloaded local model; Nexus does not install Ollama or download models. Nexus Cloud remains unavailable unless a developer externally configures its gateway and OAuth service. The public build has no hosted gateway and the binaries are unsigned.',
               '',
               'See the README and changelog for supported scope and limitations.'
             ) -join "`n"

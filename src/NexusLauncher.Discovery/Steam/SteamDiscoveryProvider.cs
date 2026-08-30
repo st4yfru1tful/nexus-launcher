@@ -155,6 +155,7 @@ public sealed class SteamDiscoveryProvider : IInstallationDiscoveryProvider
                 DisplayName = manifest.Name,
                 Category = LibraryItemCategory.Game,
                 InstallPath = installPath,
+                IconPath = IconPathNormalizer.TryNormalize(executablePath, out var iconPath) ? iconPath : null,
                 Version = manifest.BuildId,
                 ProviderId = Id,
                 Launch = new LaunchCommand

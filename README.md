@@ -6,8 +6,9 @@ Nexus Launcher is a local-first Windows launcher for bringing installed games
 and desktop applications into one searchable library. It is a WPF application
 on .NET 9 for 64-bit Windows 10 (22H2 or later) and Windows 11.
 
-> **Release status:** Nexus v0.2.0 is a prerelease. It is a usable release
-> build, but it is not presented as a finished 1.0 product.
+> **Release status:** Nexus v1.0.0 is the first stable release of the
+> documented local-launcher feature set. Connected services and launcher
+> providers listed as future work are not implied by the 1.0 label.
 
 ## What Nexus does now
 
@@ -19,46 +20,59 @@ on .NET 9 for 64-bit Windows 10 (22H2 or later) and Windows 11.
   listings and opening the official Steam page only after you choose it.
 - Searches WinGet for Windows software and starts WinGet only after an
   explicit install confirmation.
-- Offers review-before-apply AI metadata suggestions for library entries when
-  the optional Nexus AI gateway has been deployed and configured.
+- Offers optional review-before-apply metadata suggestions through an isolated
+  on-device Ollama process using an already-downloaded text-generation model.
+- Includes an optional OAuth client for a developer-operated Nexus Cloud AI
+  gateway when that external service is configured.
 - Imports user-selected ZIP mods safely into a selected game's Mods folder,
   and makes local library/settings backups.
+- Ships application and installer branding, built-in cover fallbacks, and safe
+  extraction of icons from local executables and shortcuts.
 
 Nexus never assumes game ownership, purchases, downloads, installs, or bypasses
 Steam's account, regional, age, licensing, or DRM checks. Store results are
 discovery information, not an entitlement signal.
 
-## AI metadata: an honest boundary
+## Metadata intelligence: local by default, cloud only when configured
 
-The desktop app does not ask for, store, or call OpenAI with an API key. OpenAI
-documents application credentials such as API keys or workload identity
-federation, not an end-user OpenAI sign-in flow for a desktop launcher. Nexus
-therefore uses OAuth with a **developer-owned Nexus AI gateway**, never a
-pretend OpenAI OAuth button.
+Metadata intelligence is optional and off by default. The normal 1.0 path is
+**On-device AI**: Nexus starts its own Ollama child process on a random IPv4
+loopback port with `OLLAMA_NO_CLOUD=1`, uses only a model that is already
+downloaded locally, and stops that process when Nexus closes. Nexus does not
+install Ollama, pull models, accept a remote Ollama endpoint, enable web access,
+or give the model tools. See [On-device AI setup](docs/LOCAL-AI.md).
 
-The public build ships the safe client path, but no production Nexus AI gateway
-is bundled or configured. Until one is deployed, local launcher features work
-normally and AI controls remain unavailable. A real gateway must authenticate
-its own users, enforce quotas/rate limits, and keep any model-provider
-credentials on the server. Read [docs/AI-GATEWAY.md](docs/AI-GATEWAY.md) before
-enabling it.
+**Nexus Cloud** is a separate, explicitly selected option. The public build
+contains only an OAuth-with-PKCE client for a developer-owned gateway. It does
+not include a hosted gateway or identity service, so this option is unavailable
+until a maintainer deploys and configures both. Read
+[the gateway deployment contract](docs/AI-GATEWAY.md) before enabling it.
 
-When enabled, an AI metadata request sends only a title and any available
-provider, publisher, version, executable filename, and parent-folder name.
-It never sends a full executable/install path, launch URI/arguments, a complete
-library, files, or binaries. Suggestions are shown for review and may only
-fill an empty description or add tags after the user approves them.
+The launcher has no OpenAI API-key field, bundled OpenAI credential, or direct
+end-user OpenAI OAuth flow. If a Nexus Cloud operator chooses OpenAI for its
+server-side model, that operator must keep the application credential on the
+server. It is not a desktop-user credential.
+
+For either provider, a request contains only one selected item's title and any
+available provider, publisher, version, executable filename, and parent-folder
+name. On-device requests stay on loopback. Nexus Cloud requests send that
+minimal record to the configured gateway. Neither path sends a full executable
+or install path, launch URI/arguments, complete library, files, or binaries.
+Suggestions are shown for review and may only fill an empty description or add
+tags after approval.
 
 ## Integration availability
 
-| Area | v0.2.0 behavior |
+| Area | v1.0.0 behavior |
 | --- | --- |
 | Steam local library | Reads local library manifests and launches installed games with a Steam URI when an app ID is available. |
 | Steam game discovery | Searches the Steam storefront catalog and, with confirmation, opens a validated official Store page. |
 | Windows applications | Reads standard uninstall registry entries and Start Menu shortcuts without administrator rights. |
 | Chosen folders | Scans only folders selected in Settings; it does not crawl all drives. |
 | WinGet software search | Searches configured WinGet sources and invokes the local WinGet client only after confirmation. |
-| AI metadata | Optional, off by default, privacy-minimized, gateway-OAuth client with review-before-apply suggestions. A deployed Nexus gateway is required. |
+| On-device metadata intelligence | Optional and off by default. Uses a Nexus-owned, no-cloud Ollama child process and an already-downloaded local text-generation model. Ollama and a compatible local model are user prerequisites. |
+| Nexus Cloud metadata intelligence | Optional OAuth-with-PKCE client for an externally configured, developer-owned gateway. No hosted gateway is included. |
+| Visual assets | Branded window/taskbar/installer icons, packaged ambient and cover fallbacks, and safe local executable-icon extraction with non-network fallbacks. |
 | Mods | Imports a user-selected ZIP archive into a game's local Mods folder after path validation; it is not a hosted mod catalog. |
 | Backup | Exports/restores a user-selected local library/settings backup; it is not cloud sync. |
 | Epic, GOG, EA, Ubisoft, Battle.net, Xbox, itch.io | Not implemented. |
@@ -113,7 +127,7 @@ The packaging script produces a self-contained win-x64 folder publish, portable
 ZIP, installer, and SHA-256 checksums.
 
 ~~~powershell
-.\scripts\Package.ps1 -Version 0.2.0 -RequireInstaller
+.\scripts\Package.ps1 -Version 1.0.0 -RequireInstaller
 .\scripts\Verify-Release.ps1 -ArtifactsDirectory .\artifacts
 ~~~
 

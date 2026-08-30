@@ -36,7 +36,7 @@ public sealed class SteamStoreService
         if (string.IsNullOrWhiteSpace(query)) return [];
 
         using var request = new HttpRequestMessage(HttpMethod.Get, BuildSearchUri(query, countryCode));
-        request.Headers.UserAgent.ParseAdd("NexusLauncher/0.2");
+        request.Headers.UserAgent.ParseAdd("NexusLauncher/1.0");
         using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
         if (!response.IsSuccessStatusCode)
         {

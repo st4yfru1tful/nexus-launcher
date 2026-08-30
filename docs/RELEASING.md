@@ -4,28 +4,44 @@ This checklist is for maintainers. A GitHub release must contain real, launchabl
 
 ## Before tagging
 
-1. Choose a semantic version. Use `v0.1.0` for the first prerelease unless the shipped product has earned a stable `1.0.0` designation.
+1. Choose a semantic version. Stable maintenance releases use the `1.0.x`
+   line; use a prerelease suffix only for a build that is intentionally not
+   stable.
 2. Update `CHANGELOG.md` with only behavior that was implemented and verified.
 3. Confirm that `README.md`, `PRIVACY.md`, and `SECURITY.md` reflect the release.
 4. Run a clean local validation if practical:
 
    ```powershell
    .\scripts\Test.ps1 -Configuration Release
-   .\scripts\Package.ps1 -Configuration Release -Version 0.1.0 -RequireInstaller
+   .\scripts\Package.ps1 -Configuration Release -Version 1.0.0 -RequireInstaller
    .\scripts\Verify-Release.ps1 -ArtifactsDirectory .\artifacts
    ```
 
 5. Check `git status` and inspect staged changes for credentials, local databases, logs, user paths, and build output.
-6. Test the installer and portable archive on a clean Windows environment when possible. Confirm that the application starts and that uninstalling does not silently delete user data. For the portable archive, extract it whole, confirm `NexusLauncher.portable` is beside `NexusLauncher.exe`, and confirm its data is created in the adjacent `NexusLauncherData` directory rather than `%LOCALAPPDATA%\NexusLauncher`.
-7. If code signing is configured outside this repository, verify the signature on the final installer. Do not imply a build is signed when it is not.
+6. Test the installer and portable archive on a clean Windows environment when
+   possible. Confirm that the application starts, the window/taskbar/installer
+   icon is present, packaged cover fallbacks render, missing local icons do not
+   leave blank texture placeholders, `LICENSE.txt` and
+   `THIRD-PARTY-NOTICES.txt` are present, and uninstalling does not silently
+   delete user data. For the portable archive, extract it whole, confirm
+   `NexusLauncher.portable` is beside `NexusLauncher.exe`, and confirm its data
+   is created in the adjacent `NexusLauncherData` directory rather than
+   `%LOCALAPPDATA%\NexusLauncher`.
+7. Exercise metadata intelligence in its supported states: disabled; missing
+   Ollama; Ollama with no compatible downloaded text-generation model; a ready
+   local model; and an unconfigured Nexus Cloud provider. Confirm no local
+   failure silently routes
+   to cloud and no hosted-gateway claim appears.
+8. If code signing is configured outside this repository, verify the signature
+   on the final installer. Do not imply a build is signed when it is not.
 
 ## Publish
 
 The `Release` workflow runs for a pushed tag matching `v*`.
 
 ```powershell
-git tag -a v0.1.0 -m "Nexus Launcher v0.1.0"
-git push origin v0.1.0
+git tag -a v1.0.0 -m "Nexus Launcher v1.0.0"
+git push origin v1.0.0
 ```
 
 The workflow uses the repository `GITHUB_TOKEN` to:

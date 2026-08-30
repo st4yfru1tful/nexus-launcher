@@ -2,7 +2,7 @@
 ; Package.ps1 supplies MyAppVersion and SourceDir for release builds.
 
 #ifndef MyAppVersion
-  #define MyAppVersion "0.2.0"
+  #define MyAppVersion "1.0.0"
 #endif
 
 #ifndef SourceDir
@@ -32,12 +32,17 @@ OutputBaseFilename=NexusLauncher-Setup-x64
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
+SetupIconFile=..\src\NexusLauncher.App\Assets\NexusLauncher.ico
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0.19045
 PrivilegesRequired=admin
 PrivilegesRequiredOverridesAllowed=dialog
 UninstallDisplayIcon={app}\{#MyAppExeName}
+VersionInfoDescription=Nexus Launcher local-first game and application library
+VersionInfoCompany={#MyAppPublisher}
+VersionInfoProductName={#MyAppName}
+VersionInfoProductVersion={#MyAppVersion}
 ChangesAssociations=no
 CloseApplications=yes
 RestartApplications=no
