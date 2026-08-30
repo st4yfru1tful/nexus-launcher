@@ -50,6 +50,19 @@ foreach ($entry in $checksumEntries) {
     }
 }
 
+$installer = Join-Path $directory 'NexusLauncher-Setup-x64.exe'
+$installerVersionInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($installer)
+$installerProductVersion = $installerVersionInfo.ProductVersion.Trim()
+$installerFileVersion = $installerVersionInfo.FileVersion.Trim()
+if ($installerProductVersion -notmatch '^(\d+\.\d+\.\d+)(?:[-+].*)?$') {
+    throw "Installer product version '$($installerVersionInfo.ProductVersion)' is not a semantic version."
+}
+
+$expectedInstallerFileVersion = "$($Matches[1]).0"
+if ($installerFileVersion -ne $expectedInstallerFileVersion) {
+    throw "Installer file version '$($installerVersionInfo.FileVersion)' does not match product version '$($installerVersionInfo.ProductVersion)'."
+}
+
 $archive = Join-Path $directory 'NexusLauncher-portable-x64.zip'
 $zip = [System.IO.Compression.ZipFile]::OpenRead($archive)
 try {

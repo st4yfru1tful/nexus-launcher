@@ -5,6 +5,10 @@
   #define MyAppVersion "1.0.0"
 #endif
 
+#ifndef MyAppFileVersion
+  #define MyAppFileVersion "1.0.0.0"
+#endif
+
 #ifndef SourceDir
   #define SourceDir "..\artifacts\publish"
 #endif
@@ -43,6 +47,7 @@ VersionInfoDescription=Nexus Launcher local-first game and application library
 VersionInfoCompany={#MyAppPublisher}
 VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
+VersionInfoVersion={#MyAppFileVersion}
 ChangesAssociations=no
 CloseApplications=yes
 RestartApplications=no

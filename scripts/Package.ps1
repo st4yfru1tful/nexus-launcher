@@ -98,6 +98,22 @@ try {
         -p:DebugSymbols=false
     if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
 
+    $publishedExecutable = Join-Path $publishDirectory 'NexusLauncher.exe'
+    if (-not (Test-Path -LiteralPath $publishedExecutable -PathType Leaf)) {
+        throw "Publish did not produce the expected application executable: $publishedExecutable"
+    }
+
+    $publishedVersionInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($publishedExecutable)
+    $publishedFileVersion = $publishedVersionInfo.FileVersion.Trim()
+    $publishedProductVersion = $publishedVersionInfo.ProductVersion.Trim()
+    if ($publishedFileVersion -ne $fileVersion) {
+        throw "Application file version '$($publishedVersionInfo.FileVersion)' does not match expected version '$fileVersion'."
+    }
+    if ($publishedProductVersion -ne $Version -and
+        -not $publishedProductVersion.StartsWith("$Version+", [System.StringComparison]::Ordinal)) {
+        throw "Application product version '$($publishedVersionInfo.ProductVersion)' does not match expected version '$Version'."
+    }
+
     # Keep the application license and the notices for the self-contained .NET
     # runtime in every distributable. The installer consumes this same publish
     # directory, and the portable archive is copied from it below.
@@ -129,12 +145,20 @@ try {
 
     if ((Test-Path -LiteralPath $installerScript -PathType Leaf) -and $null -ne $iscc) {
         $isccPath = if ($iscc -is [System.Management.Automation.ApplicationInfo]) { $iscc.Path } else { $iscc.FullName }
-        & $isccPath "/DMyAppVersion=$Version" "/DSourceDir=$publishDirectory" "/O$installerDirectory" '/FNexusLauncher-Setup-x64' $installerScript
+        & $isccPath "/DMyAppVersion=$Version" "/DMyAppFileVersion=$fileVersion" "/DSourceDir=$publishDirectory" "/O$installerDirectory" '/FNexusLauncher-Setup-x64' $installerScript
         if ($LASTEXITCODE -ne 0) { throw 'Inno Setup compilation failed.' }
 
         $generatedInstaller = Join-Path $installerDirectory 'NexusLauncher-Setup-x64.exe'
         if (-not (Test-Path -LiteralPath $generatedInstaller -PathType Leaf)) {
             throw "Inno Setup did not produce the expected installer: $generatedInstaller"
+        }
+
+        $installerVersionInfo = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($generatedInstaller)
+        if ($installerVersionInfo.FileVersion.Trim() -ne $fileVersion) {
+            throw "Installer file version '$($installerVersionInfo.FileVersion)' does not match expected version '$fileVersion'."
+        }
+        if ($installerVersionInfo.ProductVersion.Trim() -ne $Version) {
+            throw "Installer product version '$($installerVersionInfo.ProductVersion)' does not match expected version '$Version'."
         }
 
         Copy-Item -LiteralPath $generatedInstaller -Destination (Join-Path $artifactsDirectory 'NexusLauncher-Setup-x64.exe') -Force
