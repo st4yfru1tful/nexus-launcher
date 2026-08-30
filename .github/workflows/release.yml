@@ -101,9 +101,9 @@ jobs:
               '--notes', $releaseNotes,
               '--title', "Nexus Launcher $env:RELEASE_TAG"
             )
-            # v0.1.0 is intentionally the project's first public prerelease;
-            # subsequent prerelease tags continue to use normal SemVer suffixes.
-            if ($env:RELEASE_TAG -eq 'v0.1.0' -or $env:RELEASE_TAG -match '-') {
+            # All 0.x releases are intentionally prereleases until the project
+            # explicitly earns a stable 1.0.0 designation.
+            if ($env:RELEASE_TAG -match '^v0\.') {
               $arguments += '--prerelease'
             }
             & gh @arguments

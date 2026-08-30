@@ -4,226 +4,1001 @@
         xmlns:vm="clr-namespace:NexusLauncher.App.ViewModels"
         xmlns:models="clr-namespace:NexusLauncher.App.Models"
         xmlns:infra="clr-namespace:NexusLauncher.App.Infrastructure"
-        Title="Nexus Launcher" Width="1380" Height="840" MinWidth="1050" MinHeight="680"
-        WindowStartupLocation="CenterScreen" Loaded="Window_Loaded">
+        Title="Nexus Launcher"
+        Width="1380"
+        Height="840"
+        MinWidth="1060"
+        MinHeight="700"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource NexusBackground}"
+        Foreground="{DynamicResource NexusText}"
+        Loaded="Window_Loaded">
   <Window.InputBindings>
     <KeyBinding Key="K" Modifiers="Control" Command="{Binding OpenCommandPaletteCommand}" />
     <KeyBinding Key="F5" Command="{Binding ScanCommand}" />
     <KeyBinding Key="Escape" Command="{Binding CloseCommandPaletteCommand}" />
   </Window.InputBindings>
+
   <Window.Resources>
     <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+
+    <Style TargetType="TextBlock">
+      <Setter Property="Foreground" Value="{DynamicResource NexusText}" />
+      <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
+    </Style>
+
     <Style x:Key="SidebarItem" TargetType="ListBoxItem">
-      <Setter Property="Padding" Value="13,10" />
-      <Setter Property="Margin" Value="7,2" />
-      <Setter Property="Foreground" Value="{StaticResource NexusMutedText}" />
+      <Setter Property="Padding" Value="14,10" />
+      <Setter Property="Margin" Value="0,2" />
+      <Setter Property="Foreground" Value="{DynamicResource NexusMutedText}" />
+      <Setter Property="Cursor" Value="Hand" />
       <Setter Property="Template">
         <Setter.Value>
           <ControlTemplate TargetType="ListBoxItem">
-            <Border x:Name="surface" CornerRadius="8" Background="Transparent" Padding="{TemplateBinding Padding}">
-              <ContentPresenter />
-            </Border>
+            <Grid>
+              <Border x:Name="indicator"
+                      Width="3"
+                      Background="Transparent"
+                      CornerRadius="2"
+                      HorizontalAlignment="Left"
+                      Margin="0,7,0,7" />
+              <Border x:Name="surface"
+                      Background="Transparent"
+                      CornerRadius="10"
+                      Margin="5,0,0,0"
+                      Padding="{TemplateBinding Padding}">
+                <ContentPresenter />
+              </Border>
+            </Grid>
             <ControlTemplate.Triggers>
-              <Trigger Property="IsSelected" Value="True"><Setter TargetName="surface" Property="Background" Value="#30315C" /><Setter Property="Foreground" Value="{StaticResource NexusText}" /></Trigger>
-              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="surface" Property="Background" Value="#242B3A" /><Setter Property="Foreground" Value="{StaticResource NexusText}" /></Trigger>
+              <Trigger Property="IsSelected" Value="True">
+                <Setter TargetName="indicator" Property="Background" Value="{DynamicResource NexusAccent}" />
+                <Setter TargetName="surface" Property="Background" Value="#251A2642" />
+                <Setter Property="Foreground" Value="{DynamicResource NexusText}" />
+              </Trigger>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="surface" Property="Background" Value="#171F2A3D" />
+                <Setter Property="Foreground" Value="{DynamicResource NexusText}" />
+              </Trigger>
             </ControlTemplate.Triggers>
           </ControlTemplate>
         </Setter.Value>
       </Setter>
     </Style>
+
+    <Style x:Key="LibraryItemContainer" TargetType="ListBoxItem">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0,3" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="ListBoxItem">
+            <Border x:Name="surface"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    BorderThickness="1"
+                    CornerRadius="12"
+                    Padding="14,12">
+              <ContentPresenter />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsSelected" Value="True">
+                <Setter TargetName="surface" Property="Background" Value="#2A7B6CFF" />
+                <Setter TargetName="surface" Property="BorderBrush" Value="#807B6CFF" />
+              </Trigger>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="surface" Property="Background" Value="#142A3448" />
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+
     <Style x:Key="Card" TargetType="Border">
-      <Setter Property="Background" Value="{StaticResource NexusPanel}" />
-      <Setter Property="CornerRadius" Value="12" />
-      <Setter Property="Padding" Value="18" />
-      <Setter Property="Margin" Value="0" />
+      <Setter Property="Background" Value="{DynamicResource NexusPanel}" />
+      <Setter Property="BorderBrush" Value="#283349" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="16" />
+      <Setter Property="Padding" Value="20" />
     </Style>
-    <Style x:Key="SectionTitle" TargetType="TextBlock">
-      <Setter Property="FontSize" Value="18" />
+
+    <Style x:Key="PageTitle" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="31" />
       <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Foreground" Value="{StaticResource NexusText}" />
+      <Setter Property="Foreground" Value="{DynamicResource NexusText}" />
     </Style>
+
+    <Style x:Key="SectionTitle" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="17" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{DynamicResource NexusText}" />
+    </Style>
+
+    <Style x:Key="Eyebrow" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="10" />
+      <Setter Property="FontWeight" Value="Bold" />
+      <Setter Property="Foreground" Value="{DynamicResource NexusAccent}" />
+    </Style>
+
+    <Style x:Key="QuietButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="#34415C" />
+    </Style>
+
+    <Style x:Key="SmallPill" TargetType="Border">
+      <Setter Property="Background" Value="#172A3448" />
+      <Setter Property="BorderBrush" Value="#31425B79" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="9" />
+      <Setter Property="Padding" Value="8,4" />
+    </Style>
+
     <DataTemplate x:Key="MiniItem" DataType="{x:Type models:LibraryItem}">
-      <Border Background="{StaticResource NexusPanelRaised}" CornerRadius="10" Padding="11" Width="170" Height="94" Margin="0,0,10,0">
+      <Border Width="230"
+              Height="142"
+              Margin="0,0,14,0"
+              Background="{DynamicResource NexusPanel}"
+              BorderBrush="#2B3952"
+              BorderThickness="1"
+              CornerRadius="14"
+              ClipToBounds="True">
         <Grid>
-          <Grid.ColumnDefinitions><ColumnDefinition Width="38" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-          <Border Width="32" Height="32" CornerRadius="8" Background="{StaticResource NexusAccent}" VerticalAlignment="Top">
-            <TextBlock Text="{Binding Initial}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" />
+          <Border Opacity="0.96">
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#8B5CF6" Offset="0" />
+                <GradientStop Color="#385EEA" Offset="0.58" />
+                <GradientStop Color="#152342" Offset="1" />
+              </LinearGradientBrush>
+            </Border.Background>
           </Border>
-          <StackPanel Grid.Column="1" Margin="5,0,0,0">
-            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-            <TextBlock Text="{Binding DisplayProvider}" Foreground="{StaticResource NexusMutedText}" FontSize="11" Margin="0,4,0,0" TextTrimming="CharacterEllipsis" />
-            <TextBlock Text="{Binding LaunchActivityDisplay}" Foreground="{StaticResource NexusMutedText}" FontSize="11" Margin="0,2,0,0" />
-          </StackPanel>
+          <Ellipse Width="130" Height="130" Fill="#3FFFFFFF" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-55,-44,0" />
+          <Border Background="#95060A12" />
+          <Grid Margin="16">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="*" />
+              <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+            <Border Width="38"
+                    Height="38"
+                    Background="#E9303658"
+                    CornerRadius="11"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top">
+              <TextBlock Text="{Binding Initial}"
+                         FontSize="17"
+                         FontWeight="Bold"
+                         Foreground="White"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Center" />
+            </Border>
+            <StackPanel Grid.Row="1">
+              <TextBlock Text="{Binding CategoryLabel}"
+                         FontSize="10"
+                         FontWeight="SemiBold"
+                         Foreground="#D8E7EEFF" />
+              <TextBlock Text="{Binding Name}"
+                         FontSize="16"
+                         FontWeight="SemiBold"
+                         Foreground="White"
+                         Margin="0,3,0,0"
+                         TextTrimming="CharacterEllipsis" />
+              <TextBlock Text="{Binding LaunchActivityDisplay}"
+                         FontSize="10"
+                         Foreground="#D5E7EEFF"
+                         Margin="0,3,0,0"
+                         TextTrimming="CharacterEllipsis" />
+            </StackPanel>
+          </Grid>
         </Grid>
       </Border>
     </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:HomeViewModel}">
-      <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <StackPanel Margin="32,24,32,32">
-          <Grid Margin="0,0,0,20">
-            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+      <ScrollViewer VerticalScrollBarVisibility="Auto"
+                    HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="38,32,38,38">
+          <Grid Margin="0,0,0,24">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
             <StackPanel>
-              <TextBlock Text="{Binding Title}" FontSize="30" FontWeight="SemiBold" />
-              <TextBlock Text="{Binding Subtitle}" Foreground="{StaticResource NexusMutedText}" Margin="0,5,0,0" />
+              <TextBlock Text="YOUR DESKTOP, ORGANIZED" Style="{StaticResource Eyebrow}" />
+              <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" Margin="0,7,0,0" />
+              <TextBlock Text="{Binding Subtitle}"
+                         Foreground="{DynamicResource NexusMutedText}"
+                         Margin="0,7,0,0" />
             </StackPanel>
-            <Button Grid.Column="1" Content="↻  Rescan library" Style="{StaticResource AccentButton}" Command="{Binding DataContext.ScanCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+            <Button Grid.Column="1"
+                    Content="Rescan library"
+                    Style="{StaticResource AccentButton}"
+                    Command="{Binding DataContext.ScanCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    VerticalAlignment="Center" />
           </Grid>
-          <Border Style="{StaticResource Card}" Background="#252657" Margin="0,0,0,20">
+
+          <Border Height="236"
+                  Margin="0,0,0,22"
+                  BorderBrush="#5E7B6CFF"
+                  BorderThickness="1"
+                  CornerRadius="20"
+                  ClipToBounds="True">
             <Grid>
-              <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-              <StackPanel>
-                <TextBlock Text="Nexus is ready for your library" FontSize="20" FontWeight="SemiBold" />
-                <TextBlock Text="{Binding ScanStatus}" Foreground="#D8D7FF" Margin="0,6,0,0" />
-              </StackPanel>
-              <TextBlock Grid.Column="1" Text="⌁" FontSize="42" Foreground="#B8B0FF" VerticalAlignment="Center" />
+              <Border>
+                <Border.Background>
+                  <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                    <GradientStop Color="#2424476B" Offset="0" />
+                    <GradientStop Color="#263B287D" Offset="0.55" />
+                    <GradientStop Color="#2B7B6CFF" Offset="1" />
+                  </LinearGradientBrush>
+                </Border.Background>
+              </Border>
+              <Ellipse Width="330" Height="330" Fill="#157B6CFF" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-150,-90,0" />
+              <Ellipse Width="210" Height="210" Fill="#1269D8FF" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,110,-125" />
+              <Path Data="M0,58 C80,-12 156,126 260,48 S446,-18 560,42"
+                    Stroke="#6AA29CFF"
+                    StrokeThickness="2"
+                    Opacity="0.55"
+                    Stretch="None"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Margin="0,38,80,0" />
+              <Grid Margin="30">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center" MaxWidth="620">
+                  <Border Style="{StaticResource SmallPill}" HorizontalAlignment="Left" Background="#243B55A4" BorderBrush="#4FAD9EFF">
+                    <TextBlock Text="LOCAL-FIRST LIBRARY" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource NexusText}" />
+                  </Border>
+                  <TextBlock Text="Everything you play, in one calm place."
+                             FontSize="28"
+                             FontWeight="SemiBold"
+                             Margin="0,14,0,0" />
+                  <TextBlock Text="{Binding ScanStatus}"
+                             Foreground="{DynamicResource NexusText}"
+                             FontSize="14"
+                             TextWrapping="Wrap"
+                             LineHeight="21"
+                             Margin="0,9,0,0" />
+                </StackPanel>
+                <StackPanel Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Margin="24,0,0,0">
+                  <TextBlock Text="NEXUS"
+                             FontSize="12"
+                             FontWeight="Bold"
+                             Foreground="{DynamicResource NexusText}"
+                             HorizontalAlignment="Right" />
+                  <TextBlock Text="01"
+                             FontSize="46"
+                             FontWeight="SemiBold"
+                             Foreground="{DynamicResource NexusText}"
+                             HorizontalAlignment="Right"
+                             Margin="0,-4,0,0" />
+                </StackPanel>
+              </Grid>
             </Grid>
           </Border>
-          <UniformGrid Columns="3" Margin="0,0,0,28">
-            <Border Style="{StaticResource Card}" Margin="0,0,12,0"><StackPanel><TextBlock Text="GAMES" Foreground="{StaticResource NexusMutedText}" FontSize="11" /><TextBlock Text="{Binding GameCount}" FontSize="28" FontWeight="SemiBold" Margin="0,4,0,0" /></StackPanel></Border>
-            <Border Style="{StaticResource Card}" Margin="0,0,12,0"><StackPanel><TextBlock Text="APPLICATIONS" Foreground="{StaticResource NexusMutedText}" FontSize="11" /><TextBlock Text="{Binding AppCount}" FontSize="28" FontWeight="SemiBold" Margin="0,4,0,0" /></StackPanel></Border>
-            <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="FAVORITES" Foreground="{StaticResource NexusMutedText}" FontSize="11" /><TextBlock Text="{Binding FavoriteCount}" FontSize="28" FontWeight="SemiBold" Margin="0,4,0,0" /></StackPanel></Border>
+
+          <UniformGrid Columns="3" Margin="0,0,0,30">
+            <Border Style="{StaticResource Card}" Margin="0,0,14,0">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                  <TextBlock Text="GAMES" Style="{StaticResource Eyebrow}" />
+                  <TextBlock Text="{Binding GameCount}" FontSize="32" FontWeight="SemiBold" Margin="0,8,0,0" />
+                  <TextBlock Text="Ready when you are" Foreground="{DynamicResource NexusMutedText}" FontSize="12" Margin="0,2,0,0" />
+                </StackPanel>
+                <Border Grid.Column="1" Width="38" Height="38" CornerRadius="12" Background="#217B6CFF">
+                  <TextBlock Text="&#xE7FC;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+              </Grid>
+            </Border>
+            <Border Style="{StaticResource Card}" Margin="0,0,14,0">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                  <TextBlock Text="APPLICATIONS" Style="{StaticResource Eyebrow}" />
+                  <TextBlock Text="{Binding AppCount}" FontSize="32" FontWeight="SemiBold" Margin="0,8,0,0" />
+                  <TextBlock Text="Work and utilities" Foreground="{DynamicResource NexusMutedText}" FontSize="12" Margin="0,2,0,0" />
+                </StackPanel>
+                <Border Grid.Column="1" Width="38" Height="38" CornerRadius="12" Background="#1E48B9D6">
+                  <TextBlock Text="&#xE71D;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+              </Grid>
+            </Border>
+            <Border Style="{StaticResource Card}">
+              <Grid>
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                  <TextBlock Text="FAVORITES" Style="{StaticResource Eyebrow}" />
+                  <TextBlock Text="{Binding FavoriteCount}" FontSize="32" FontWeight="SemiBold" Margin="0,8,0,0" />
+                  <TextBlock Text="Pinned for quick launch" Foreground="{DynamicResource NexusMutedText}" FontSize="12" Margin="0,2,0,0" />
+                </StackPanel>
+                <Border Grid.Column="1" Width="38" Height="38" CornerRadius="12" Background="#2CDB9A55">
+                  <TextBlock Text="&#xE734;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+              </Grid>
+            </Border>
           </UniformGrid>
-          <TextBlock Text="Continue playing" Style="{StaticResource SectionTitle}" Margin="0,0,0,11" />
-          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Margin="0,0,0,26">
-            <ItemsControl ItemsSource="{Binding ContinuePlaying}" ItemTemplate="{StaticResource MiniItem}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel></ItemsControl>
+
+          <Grid Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Recently launched" Style="{StaticResource SectionTitle}" />
+            <TextBlock Grid.Column="1" Text="Activity stays on this PC" Foreground="{DynamicResource NexusMutedText}" FontSize="12" VerticalAlignment="Center" />
+          </Grid>
+          <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                        VerticalScrollBarVisibility="Disabled"
+                        Margin="0,0,0,28">
+            <ItemsControl ItemsSource="{Binding ContinuePlaying}" ItemTemplate="{StaticResource MiniItem}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+            </ItemsControl>
           </ScrollViewer>
-          <TextBlock Text="Favorites" Style="{StaticResource SectionTitle}" Margin="0,0,0,11" />
-          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-            <ItemsControl ItemsSource="{Binding Favorites}" ItemTemplate="{StaticResource MiniItem}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" /></ItemsPanelTemplate></ItemsControl.ItemsPanel></ItemsControl>
+
+          <Grid Margin="0,0,0,12">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Your favorites" Style="{StaticResource SectionTitle}" />
+            <TextBlock Grid.Column="1" Text="Mark titles in Library to pin them here" Foreground="{DynamicResource NexusMutedText}" FontSize="12" VerticalAlignment="Center" />
+          </Grid>
+          <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                        VerticalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Favorites}" ItemTemplate="{StaticResource MiniItem}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+            </ItemsControl>
           </ScrollViewer>
         </StackPanel>
       </ScrollViewer>
     </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:LibraryViewModel}">
-      <Grid Margin="32,24,32,32">
-        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-        <Grid>
-          <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-          <StackPanel><TextBlock Text="{Binding Title}" FontSize="30" FontWeight="SemiBold" /><TextBlock Text="{Binding Subtitle}" Foreground="{StaticResource NexusMutedText}" Margin="0,5,0,0" /></StackPanel>
+      <Grid Margin="38,32,38,36">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid Margin="0,0,0,24">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock Text="YOUR COLLECTION" Style="{StaticResource Eyebrow}" />
+            <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" Margin="0,7,0,0" />
+            <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource NexusMutedText}" Margin="0,7,0,0" />
+          </StackPanel>
           <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-            <Button Content="+ Add executable" Command="{Binding AddExecutableCommand}" Margin="0,0,8,0" />
-            <Button Content="↻ Rescan" Style="{StaticResource AccentButton}" Command="{Binding DataContext.ScanCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
+            <Button Content="Add executable" Command="{Binding AddExecutableCommand}" Style="{StaticResource QuietButton}" Margin="0,0,10,0" />
+            <Button Content="Rescan" Style="{StaticResource AccentButton}" Command="{Binding DataContext.ScanCommand, RelativeSource={RelativeSource AncestorType=Window}}" />
           </StackPanel>
         </Grid>
-        <Grid Grid.Row="1" Margin="0,22,0,15">
-          <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="150" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-          <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" ToolTip="Search your library" />
-          <ComboBox Grid.Column="1" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Margin="10,0,0,0" />
-          <CheckBox Grid.Column="2" Content="Show hidden" IsChecked="{Binding ShowHidden}" Margin="15,0,0,0" VerticalAlignment="Center" />
-        </Grid>
-        <Grid Grid.Row="2">
-          <Grid.ColumnDefinitions><ColumnDefinition Width="3*" /><ColumnDefinition Width="2*" /></Grid.ColumnDefinitions>
-          <Border Style="{StaticResource Card}" Padding="6" Margin="0,0,15,0">
-            <ListBox ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedItem}" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-              <ListBox.ItemTemplate>
-                <DataTemplate DataType="{x:Type models:LibraryItem}">
-                  <Border Padding="12" Margin="0,1" CornerRadius="8" Background="Transparent">
-                    <Grid>
-                      <Grid.ColumnDefinitions><ColumnDefinition Width="46" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                      <Border Width="36" Height="36" CornerRadius="9" Background="{StaticResource NexusAccent}" VerticalAlignment="Center"><TextBlock Text="{Binding Initial}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" /></Border>
-                      <StackPanel Grid.Column="1" Margin="2,0,10,0"><TextBlock Text="{Binding Name}" FontWeight="SemiBold" /><TextBlock Text="{Binding CategoryLabel}" Foreground="{StaticResource NexusMutedText}" FontSize="12" Margin="0,3,0,0" /></StackPanel>
-                      <StackPanel Grid.Column="2" HorizontalAlignment="Right"><TextBlock Text="{Binding DisplayProvider}" Foreground="{StaticResource NexusMutedText}" FontSize="12" HorizontalAlignment="Right" /><TextBlock Text="{Binding LaunchActivityDisplay}" Foreground="{StaticResource NexusMutedText}" FontSize="11" Margin="0,3,0,0" HorizontalAlignment="Right" /></StackPanel>
-                    </Grid>
-                  </Border>
-                </DataTemplate>
-              </ListBox.ItemTemplate>
-            </ListBox>
+
+        <Grid Grid.Row="1" Margin="0,0,0,18">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="170" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <Border Height="44" Background="{DynamicResource NexusPanel}" BorderBrush="#31415D" BorderThickness="1" CornerRadius="11">
+            <Grid>
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="42" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Foreground="{DynamicResource NexusMutedText}" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              <TextBox Grid.Column="1"
+                       Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                       ToolTip="Search your library"
+                       BorderThickness="0"
+                       Background="Transparent"
+                       VerticalContentAlignment="Center"
+                       Padding="0,0,12,0" />
+            </Grid>
           </Border>
-          <Border Grid.Column="1" Style="{StaticResource Card}">
+          <ComboBox Grid.Column="1" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Margin="12,0,0,0" />
+          <Border Grid.Column="2" Style="{StaticResource SmallPill}" Background="Transparent" BorderBrush="#31415D" Margin="12,0,0,0">
+            <CheckBox Content="Show hidden" IsChecked="{Binding ShowHidden}" VerticalAlignment="Center" />
+          </Border>
+        </Grid>
+
+        <Grid Grid.Row="2">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*" />
+            <ColumnDefinition Width="2*" />
+          </Grid.ColumnDefinitions>
+          <Border Style="{StaticResource Card}" Padding="8" Margin="0,0,18,0">
+            <Grid>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+              </Grid.RowDefinitions>
+              <Grid Margin="10,8,10,10">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="LIBRARY ITEMS" Style="{StaticResource Eyebrow}" />
+                <TextBlock Grid.Column="1" Text="Select a title for details" Foreground="{DynamicResource NexusMutedText}" FontSize="11" />
+              </Grid>
+              <ListBox Grid.Row="1"
+                       ItemsSource="{Binding Items}"
+                       SelectedItem="{Binding SelectedItem}"
+                       ItemContainerStyle="{StaticResource LibraryItemContainer}"
+                       ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemTemplate>
+                  <DataTemplate DataType="{x:Type models:LibraryItem}">
+                    <Grid>
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="52" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                      </Grid.ColumnDefinitions>
+                      <Border Width="42" Height="42" CornerRadius="13" VerticalAlignment="Center" Background="#257B6CFF">
+                        <TextBlock Text="{Binding Initial}" FontSize="17" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                      </Border>
+                      <StackPanel Grid.Column="1" Margin="8,0,12,0" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                          <TextBlock Text="{Binding CategoryLabel}" Foreground="{DynamicResource NexusMutedText}" FontSize="11" />
+                          <TextBlock Text="•" Foreground="{DynamicResource NexusMutedText}" Margin="6,0" FontSize="11" />
+                          <TextBlock Text="{Binding DisplayProvider}" Foreground="{DynamicResource NexusMutedText}" FontSize="11" TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                      </StackPanel>
+                      <StackPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding LaunchActivityDisplay}" Foreground="{DynamicResource NexusMutedText}" FontSize="11" HorizontalAlignment="Right" />
+                        <TextBlock Text="★" Foreground="#F5C451" FontSize="12" HorizontalAlignment="Right" Visibility="{Binding IsFavorite, Converter={StaticResource BoolToVisibility}}" Margin="0,3,0,0" />
+                      </StackPanel>
+                    </Grid>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </Grid>
+          </Border>
+
+          <Border Grid.Column="1" Style="{StaticResource Card}" Padding="24">
+            <Grid>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="250">
+              <StackPanel.Style>
+                <Style TargetType="StackPanel">
+                  <Setter Property="Visibility" Value="Collapsed" />
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding SelectedItem}" Value="{x:Null}">
+                      <Setter Property="Visibility" Value="Visible" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </StackPanel.Style>
+              <Border Width="58" Height="58" CornerRadius="18" Background="#1D7B6CFF" HorizontalAlignment="Center">
+                <TextBlock Text="&#xE8A5;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              </Border>
+              <TextBlock Text="Pick something to launch" FontSize="18" FontWeight="SemiBold" HorizontalAlignment="Center" Margin="0,17,0,0" TextAlignment="Center" />
+              <TextBlock Text="Select a game or application to see its details and quick actions."
+                         Foreground="{DynamicResource NexusMutedText}"
+                         TextWrapping="Wrap"
+                         TextAlignment="Center"
+                         LineHeight="20"
+                         Margin="0,7,0,0" />
+            </StackPanel>
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
             <ContentControl Content="{Binding SelectedItem}">
+              <ContentControl.Style>
+                <Style TargetType="ContentControl">
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding SelectedItem}" Value="{x:Null}">
+                      <Setter Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </ContentControl.Style>
               <ContentControl.ContentTemplate>
                 <DataTemplate DataType="{x:Type models:LibraryItem}">
                   <StackPanel>
-                    <Border Width="58" Height="58" CornerRadius="14" Background="{StaticResource NexusAccent}" HorizontalAlignment="Left"><TextBlock Text="{Binding Initial}" FontSize="25" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
-                    <TextBlock Text="{Binding Name}" FontSize="22" FontWeight="SemiBold" Margin="0,14,0,0" TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding DisplayProvider}" Foreground="{StaticResource NexusMutedText}" Margin="0,3,0,16" />
-                    <Button Content="▶  Launch" Style="{StaticResource AccentButton}" Command="{Binding DataContext.LaunchCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Margin="0,0,0,8" />
-                    <Button Content="Open installation folder" Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Margin="0,0,0,12" />
-                    <Separator Background="#39435A" Margin="0,0,0,12" />
-                    <TextBlock Text="DETAILS" Foreground="{StaticResource NexusMutedText}" FontSize="10" FontWeight="Bold" />
-                    <TextBlock Text="{Binding CategoryLabel}" Margin="0,6,0,0" />
-                    <TextBlock Text="{Binding Publisher}" Foreground="{StaticResource NexusMutedText}" Margin="0,4,0,0" TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding Version}" Foreground="{StaticResource NexusMutedText}" Margin="0,4,0,0" />
-                    <TextBlock Text="{Binding InstallPath}" Foreground="{StaticResource NexusMutedText}" Margin="0,4,0,12" TextWrapping="Wrap" />
-                    <WrapPanel><Button Content="★ Favorite" Command="{Binding DataContext.ToggleFavoriteCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Margin="0,0,8,8" /><Button Content="Hide" Command="{Binding DataContext.HideCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Margin="0,0,8,8" /><Button Content="Remove" Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" /></WrapPanel>
+                    <Border Height="112" CornerRadius="15" ClipToBounds="True" Margin="0,0,0,20">
+                      <Grid>
+                        <Border>
+                          <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                              <GradientStop Color="#7B6CFF" Offset="0" />
+                              <GradientStop Color="#243B7A" Offset="1" />
+                            </LinearGradientBrush>
+                          </Border.Background>
+                        </Border>
+                        <Ellipse Width="170" Height="170" Fill="#38FFFFFF" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-82,-55,0" />
+                        <Border Width="62" Height="62" CornerRadius="18" Background="#D9212745" Margin="18" HorizontalAlignment="Left" VerticalAlignment="Bottom">
+                          <TextBlock Text="{Binding Initial}" FontSize="27" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                      </Grid>
+                    </Border>
+                    <TextBlock Text="{Binding Name}" FontSize="24" FontWeight="SemiBold" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding DisplayProvider}" Foreground="{DynamicResource NexusMutedText}" Margin="0,5,0,20" />
+                    <Button Content="Launch" Style="{StaticResource AccentButton}" Command="{Binding DataContext.LaunchCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Margin="0,0,0,9" />
+                    <Button Content="Open installation folder" Style="{StaticResource QuietButton}" Command="{Binding DataContext.OpenFolderCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Margin="0,0,0,20" />
+                    <Border Height="1" Background="#2D3A52" Margin="0,0,0,18" />
+                    <TextBlock Text="DETAILS" Style="{StaticResource Eyebrow}" />
+                    <TextBlock Text="{Binding CategoryLabel}" Margin="0,9,0,0" />
+                    <TextBlock Text="{Binding Publisher}" Foreground="{DynamicResource NexusMutedText}" Margin="0,5,0,0" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Version}" Foreground="{DynamicResource NexusMutedText}" Margin="0,5,0,0" />
+                    <TextBlock Text="{Binding InstallPath}" Foreground="{DynamicResource NexusMutedText}" FontSize="11" Margin="0,6,0,18" TextWrapping="Wrap" />
+                    <WrapPanel>
+                      <Button Content="Favorite" Command="{Binding DataContext.ToggleFavoriteCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Style="{StaticResource QuietButton}" Margin="0,0,8,8" />
+                      <Button Content="Hide" Command="{Binding DataContext.HideCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Style="{StaticResource QuietButton}" Margin="0,0,8,8" />
+                      <Button Content="Remove" Command="{Binding DataContext.RemoveCommand, RelativeSource={RelativeSource AncestorType=ContentControl}}" Background="#2F672C3A" BorderBrush="#A26D4050" Margin="0,0,0,8" />
+                    </WrapPanel>
                   </StackPanel>
                 </DataTemplate>
               </ContentControl.ContentTemplate>
             </ContentControl>
+            </ScrollViewer>
+            </Grid>
           </Border>
         </Grid>
-        <TextBlock Grid.Row="3" Text="{Binding Status}" Foreground="{StaticResource NexusMutedText}" Margin="0,12,0,0" />
+        <TextBlock Grid.Row="3" Text="{Binding Status}" Foreground="{DynamicResource NexusMutedText}" FontSize="12" Margin="2,14,0,0" TextTrimming="CharacterEllipsis" />
       </Grid>
     </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:StoreViewModel}">
-      <Grid Margin="32,24,32,32">
-        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-        <StackPanel><TextBlock Text="{Binding Title}" FontSize="30" FontWeight="SemiBold" /><TextBlock Text="{Binding Subtitle}" Foreground="{StaticResource NexusMutedText}" Margin="0,5,0,0" /></StackPanel>
-        <Grid Grid.Row="1" Margin="0,24,0,15"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBox Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center" ToolTip="Search WinGet" /><Button Grid.Column="1" Content="Search WinGet" Style="{StaticResource AccentButton}" Command="{Binding SearchCommand}" Margin="10,0,0,0" /></Grid>
-        <Border Grid.Row="2" Style="{StaticResource Card}" Padding="6">
-          <ListBox ItemsSource="{Binding Packages}" SelectedItem="{Binding SelectedPackage}">
+      <Grid Margin="38,32,38,36">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <StackPanel>
+          <TextBlock Text="DISCOVER SOFTWARE" Style="{StaticResource Eyebrow}" />
+          <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" Margin="0,7,0,0" />
+          <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource NexusMutedText}" Margin="0,7,0,0" />
+        </StackPanel>
+        <Grid Grid.Row="1" Margin="0,24,0,18">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <Border Height="44" Background="{DynamicResource NexusPanel}" BorderBrush="#31415D" BorderThickness="1" CornerRadius="11">
+            <TextBox Text="{Binding Query, UpdateSourceTrigger=PropertyChanged}" ToolTip="Search WinGet" BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center" />
+          </Border>
+          <Button Grid.Column="1" Content="Search WinGet" Style="{StaticResource AccentButton}" Command="{Binding SearchCommand}" Margin="12,0,0,0" />
+        </Grid>
+        <Border Grid.Row="2" Style="{StaticResource Card}" Padding="8">
+          <ListBox ItemsSource="{Binding Packages}" SelectedItem="{Binding SelectedPackage}" ItemContainerStyle="{StaticResource LibraryItemContainer}">
             <ListBox.ItemTemplate>
               <DataTemplate DataType="{x:Type models:StorePackage}">
-                <Border Padding="13" Margin="0,1" CornerRadius="8"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel><TextBlock Text="{Binding Name}" FontWeight="SemiBold" /><TextBlock Text="{Binding Id}" Foreground="{StaticResource NexusMutedText}" FontSize="12" Margin="0,3,0,0" /></StackPanel><TextBlock Grid.Column="1" Text="{Binding Summary}" Foreground="{StaticResource NexusMutedText}" VerticalAlignment="Center" /></Grid></Border>
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="46" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <Border Width="36" Height="36" Background="#217B6CFF" CornerRadius="11" VerticalAlignment="Center">
+                    <TextBlock Text="&#xE719;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  </Border>
+                  <StackPanel Grid.Column="1" Margin="7,0,14,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding Id}" Foreground="{DynamicResource NexusMutedText}" FontSize="12" Margin="0,3,0,0" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="2" Text="{Binding Summary}" Foreground="{DynamicResource NexusMutedText}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="310" />
+                </Grid>
               </DataTemplate>
             </ListBox.ItemTemplate>
           </ListBox>
         </Border>
-        <Grid Grid.Row="3" Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="{Binding Status}" Foreground="{StaticResource NexusMutedText}" TextWrapping="Wrap" VerticalAlignment="Center" /><Button Grid.Column="1" Content="Install selected" Command="{Binding InstallCommand}" Margin="15,0,0,0" /></Grid>
+        <Grid Grid.Row="3" Margin="0,15,0,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <TextBlock Text="{Binding Status}" Foreground="{DynamicResource NexusMutedText}" TextWrapping="Wrap" VerticalAlignment="Center" />
+          <Button Grid.Column="1" Content="Install selected" Command="{Binding InstallCommand}" Style="{StaticResource AccentButton}" Margin="18,0,0,0" />
+        </Grid>
       </Grid>
     </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:ModsViewModel}">
-      <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="32,24,32,32">
-        <TextBlock Text="{Binding Title}" FontSize="30" FontWeight="SemiBold" /><TextBlock Text="{Binding Subtitle}" Foreground="{StaticResource NexusMutedText}" Margin="0,5,0,24" />
-        <Border Style="{StaticResource Card}" MaxWidth="760" HorizontalAlignment="Left"><StackPanel>
-          <TextBlock Text="Local ZIP mod installation" FontSize="20" FontWeight="SemiBold" />
-          <TextBlock Text="This tool is deliberately conservative: it only extracts ZIP files and checks every archive path. It is for games that document a Mods folder as the correct destination." Foreground="{StaticResource NexusMutedText}" TextWrapping="Wrap" Margin="0,8,0,18" />
-          <TextBlock Text="Game" Foreground="{StaticResource NexusMutedText}" /><ComboBox ItemsSource="{Binding Games}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedGame}" Margin="0,6,0,14" />
-          <TextBlock Text="{Binding ModFolder}" Foreground="{StaticResource NexusMutedText}" TextWrapping="Wrap" Margin="0,0,0,14" />
-          <WrapPanel><Button Content="Import ZIP archive" Style="{StaticResource AccentButton}" Command="{Binding ImportZipCommand}" Margin="0,0,8,0" /><Button Content="Open Mods folder" Command="{Binding OpenFolderCommand}" /></WrapPanel>
-          <TextBlock Text="{Binding Status}" Foreground="{StaticResource NexusMutedText}" Margin="0,16,0,0" TextWrapping="Wrap" />
-        </StackPanel></Border>
-      </StackPanel></ScrollViewer>
+      <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="38,32,38,38" MaxWidth="900" HorizontalAlignment="Left">
+          <TextBlock Text="LOCAL MODS" Style="{StaticResource Eyebrow}" />
+          <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" Margin="0,7,0,0" />
+          <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource NexusMutedText}" Margin="0,7,0,26" />
+          <Border Style="{StaticResource Card}">
+            <StackPanel>
+              <Border Width="44" Height="44" Background="#217B6CFF" CornerRadius="14" HorizontalAlignment="Left">
+                <TextBlock Text="&#xE896;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              </Border>
+              <TextBlock Text="Install a local ZIP archive" FontSize="20" FontWeight="SemiBold" Margin="0,18,0,0" />
+              <TextBlock Text="Nexus extracts only the ZIP archive you choose and validates every path before writing to the selected game’s Mods folder."
+                         Foreground="{DynamicResource NexusMutedText}"
+                         TextWrapping="Wrap"
+                         LineHeight="22"
+                         Margin="0,8,0,22" />
+              <TextBlock Text="Game" Style="{StaticResource Eyebrow}" />
+              <ComboBox ItemsSource="{Binding Games}" DisplayMemberPath="Name" SelectedItem="{Binding SelectedGame}" Margin="0,7,0,14" />
+              <Border Background="#142A3448" BorderBrush="#2D3A52" BorderThickness="1" CornerRadius="10" Padding="13,10" Margin="0,0,0,18">
+                <TextBlock Text="{Binding ModFolder}" Foreground="{DynamicResource NexusMutedText}" TextWrapping="Wrap" />
+              </Border>
+              <WrapPanel>
+                <Button Content="Import ZIP archive" Style="{StaticResource AccentButton}" Command="{Binding ImportZipCommand}" Margin="0,0,10,0" />
+                <Button Content="Open Mods folder" Style="{StaticResource QuietButton}" Command="{Binding OpenFolderCommand}" />
+              </WrapPanel>
+              <TextBlock Text="{Binding Status}" Foreground="{DynamicResource NexusMutedText}" Margin="0,18,0,0" TextWrapping="Wrap" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
     </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:CollectionsViewModel}">
-      <Grid Margin="32,24,32,32"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-        <StackPanel><TextBlock Text="{Binding Title}" FontSize="30" FontWeight="SemiBold" /><TextBlock Text="{Binding Subtitle}" Foreground="{StaticResource NexusMutedText}" Margin="0,5,0,0" /></StackPanel>
-        <ComboBox Grid.Row="1" ItemsSource="{Binding Collections}" SelectedItem="{Binding SelectedCollection}" Width="210" HorizontalAlignment="Left" Margin="0,24,0,15" />
-        <Border Grid.Row="2" Style="{StaticResource Card}" Padding="6"><ListBox ItemsSource="{Binding Items}"><ListBox.ItemTemplate><DataTemplate DataType="{x:Type models:LibraryItem}"><Border Padding="13" Margin="0,1" CornerRadius="8"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="45" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><Border Width="34" Height="34" CornerRadius="8" Background="{StaticResource NexusAccent}"><TextBlock Text="{Binding Initial}" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" /></Border><StackPanel Grid.Column="1" Margin="7,0,0,0"><TextBlock Text="{Binding Name}" FontWeight="SemiBold" /><TextBlock Text="{Binding DisplayProvider}" Foreground="{StaticResource NexusMutedText}" FontSize="12" /></StackPanel><TextBlock Grid.Column="2" Text="{Binding LaunchActivityDisplay}" Foreground="{StaticResource NexusMutedText}" VerticalAlignment="Center" /></Grid></Border></DataTemplate></ListBox.ItemTemplate></ListBox></Border>
+      <Grid Margin="38,32,38,36">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <StackPanel>
+          <TextBlock Text="CURATE YOUR SPACE" Style="{StaticResource Eyebrow}" />
+          <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" Margin="0,7,0,0" />
+          <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource NexusMutedText}" Margin="0,7,0,0" />
+        </StackPanel>
+        <ComboBox Grid.Row="1" ItemsSource="{Binding Collections}" SelectedItem="{Binding SelectedCollection}" Width="220" HorizontalAlignment="Left" Margin="0,24,0,18" />
+        <Border Grid.Row="2" Style="{StaticResource Card}" Padding="8">
+          <ListBox ItemsSource="{Binding Items}" ItemContainerStyle="{StaticResource LibraryItemContainer}">
+            <ListBox.ItemTemplate>
+              <DataTemplate DataType="{x:Type models:LibraryItem}">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="48" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <Border Width="38" Height="38" CornerRadius="12" Background="#217B6CFF">
+                    <TextBlock Text="{Binding Initial}" FontSize="16" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  </Border>
+                  <StackPanel Grid.Column="1" Margin="8,0,0,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding DisplayProvider}" Foreground="{DynamicResource NexusMutedText}" FontSize="12" Margin="0,3,0,0" />
+                  </StackPanel>
+                  <TextBlock Grid.Column="2" Text="{Binding LaunchActivityDisplay}" Foreground="{DynamicResource NexusMutedText}" VerticalAlignment="Center" FontSize="12" />
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Border>
       </Grid>
     </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:CloudViewModel}">
-      <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="32,24,32,32"><TextBlock Text="{Binding Title}" FontSize="30" FontWeight="SemiBold" /><TextBlock Text="{Binding Subtitle}" Foreground="{StaticResource NexusMutedText}" Margin="0,5,0,24" />
-        <Border Style="{StaticResource Card}" MaxWidth="760" HorizontalAlignment="Left"><StackPanel><TextBlock Text="Move your library on your terms" FontSize="20" FontWeight="SemiBold" /><TextBlock Text="Nexus v0.1 creates a local ZIP backup containing your library and settings. It does not encrypt it, upload it, or connect an account. Keep backups somewhere you trust." Foreground="{StaticResource NexusMutedText}" TextWrapping="Wrap" Margin="0,8,0,18" /><WrapPanel><Button Content="Export backup" Style="{StaticResource AccentButton}" Command="{Binding ExportCommand}" Margin="0,0,8,0" /><Button Content="Restore backup" Command="{Binding RestoreCommand}" /></WrapPanel><TextBlock Text="{Binding Status}" Foreground="{StaticResource NexusMutedText}" Margin="0,16,0,0" TextWrapping="Wrap" /></StackPanel></Border>
-      </StackPanel></ScrollViewer>
+      <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="38,32,38,38" MaxWidth="900" HorizontalAlignment="Left">
+          <TextBlock Text="BACKUP AND RESTORE" Style="{StaticResource Eyebrow}" />
+          <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" Margin="0,7,0,0" />
+          <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource NexusMutedText}" Margin="0,7,0,26" />
+          <Border Style="{StaticResource Card}">
+            <StackPanel>
+              <Border Width="44" Height="44" Background="#217B6CFF" CornerRadius="14" HorizontalAlignment="Left">
+                <TextBlock Text="&#xE753;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              </Border>
+              <TextBlock Text="Move your library on your terms" FontSize="20" FontWeight="SemiBold" Margin="0,18,0,0" />
+              <TextBlock Text="Nexus creates a local ZIP backup of your library and settings. It does not upload it, create an account, or connect a cloud service."
+                         Foreground="{DynamicResource NexusMutedText}"
+                         TextWrapping="Wrap"
+                         LineHeight="22"
+                         Margin="0,8,0,22" />
+              <WrapPanel>
+                <Button Content="Export backup" Style="{StaticResource AccentButton}" Command="{Binding ExportCommand}" Margin="0,0,10,0" />
+                <Button Content="Restore backup" Style="{StaticResource QuietButton}" Command="{Binding RestoreCommand}" />
+              </WrapPanel>
+              <TextBlock Text="{Binding Status}" Foreground="{DynamicResource NexusMutedText}" Margin="0,18,0,0" TextWrapping="Wrap" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
     </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
-      <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="32,24,32,32" MaxWidth="850" HorizontalAlignment="Left">
-        <TextBlock Text="{Binding Title}" FontSize="30" FontWeight="SemiBold" /><TextBlock Text="{Binding Subtitle}" Foreground="{StaticResource NexusMutedText}" Margin="0,5,0,24" />
-        <Border Style="{StaticResource Card}" Margin="0,0,0,14"><StackPanel><TextBlock Text="Appearance" Style="{StaticResource SectionTitle}" /><TextBlock Text="Theme" Foreground="{StaticResource NexusMutedText}" Margin="0,14,0,5" /><ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" Width="150" HorizontalAlignment="Left" /></StackPanel></Border>
-        <Border Style="{StaticResource Card}" Margin="0,0,0,14"><StackPanel><TextBlock Text="Library scanning" Style="{StaticResource SectionTitle}" /><CheckBox Content="Check registered Windows applications" IsChecked="{Binding IncludeInstalledApplications}" Margin="0,14,0,5" /><CheckBox Content="Check Start menu shortcuts" IsChecked="{Binding IncludeStartMenuShortcuts}" Margin="0,5,0,14" /><TextBlock Text="Extra scan folders" Foreground="{StaticResource NexusMutedText}" /><ListBox ItemsSource="{Binding ScanFolders}" SelectedItem="{Binding SelectedScanFolder}" MaxHeight="110" Margin="0,6,0,10" /><WrapPanel><Button Content="Add folder" Command="{Binding AddScanFolderCommand}" Margin="0,0,8,0" /><Button Content="Remove selected" Command="{Binding RemoveScanFolderCommand}" /></WrapPanel></StackPanel></Border>
-        <Border Style="{StaticResource Card}" Margin="0,0,0,14"><StackPanel><TextBlock Text="Privacy" Style="{StaticResource SectionTitle}" /><TextBlock Text="Online metadata and AI identification are intentionally unavailable in this local-first v0.1 build. Nexus does not send executable metadata, files, library contents, or account data to any service." Foreground="{StaticResource NexusMutedText}" TextWrapping="Wrap" Margin="0,14,0,0" /></StackPanel></Border>
-        <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="Diagnostics" Style="{StaticResource SectionTitle}" /><TextBlock Text="{Binding DataStorageDescription}" Foreground="{StaticResource NexusMutedText}" TextWrapping="Wrap" Margin="0,8,0,12" /><WrapPanel><Button Content="Open data folder" Command="{Binding OpenDataCommand}" Margin="0,0,8,0" /><Button Content="Save settings" Style="{StaticResource AccentButton}" Command="{Binding SaveCommand}" /></WrapPanel><TextBlock Text="{Binding Status}" Foreground="{StaticResource NexusMutedText}" Margin="0,12,0,0" /></StackPanel></Border>
-      </StackPanel></ScrollViewer>
+      <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="38,32,38,38" MaxWidth="920" HorizontalAlignment="Left">
+          <TextBlock Text="PREFERENCES" Style="{StaticResource Eyebrow}" />
+          <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" Margin="0,7,0,0" />
+          <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource NexusMutedText}" Margin="0,7,0,26" />
+          <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+            <StackPanel>
+              <TextBlock Text="Appearance" Style="{StaticResource SectionTitle}" />
+              <TextBlock Text="Choose how Nexus follows your desktop theme." Foreground="{DynamicResource NexusMutedText}" Margin="0,7,0,15" />
+              <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" Width="180" HorizontalAlignment="Left" />
+            </StackPanel>
+          </Border>
+          <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+            <StackPanel>
+              <TextBlock Text="Library scanning" Style="{StaticResource SectionTitle}" />
+              <TextBlock Text="Choose only the local sources you want Nexus to check." Foreground="{DynamicResource NexusMutedText}" Margin="0,7,0,13" />
+              <CheckBox Content="Check registered Windows applications" IsChecked="{Binding IncludeInstalledApplications}" Margin="0,5,0,5" />
+              <CheckBox Content="Check Start menu shortcuts" IsChecked="{Binding IncludeStartMenuShortcuts}" Margin="0,5,0,15" />
+              <TextBlock Text="EXTRA SCAN FOLDERS" Style="{StaticResource Eyebrow}" />
+              <ListBox ItemsSource="{Binding ScanFolders}" SelectedItem="{Binding SelectedScanFolder}" MaxHeight="120" Margin="0,8,0,12">
+                <ListBox.ItemTemplate>
+                  <DataTemplate>
+                    <TextBlock Text="{Binding}" Foreground="{DynamicResource NexusMutedText}" Padding="8,5" TextTrimming="CharacterEllipsis" />
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+              <WrapPanel>
+                <Button Content="Add folder" Command="{Binding AddScanFolderCommand}" Style="{StaticResource QuietButton}" Margin="0,0,10,0" />
+                <Button Content="Remove selected" Command="{Binding RemoveScanFolderCommand}" Style="{StaticResource QuietButton}" />
+              </WrapPanel>
+            </StackPanel>
+          </Border>
+          <Border Style="{StaticResource Card}" Margin="0,0,0,14">
+            <StackPanel>
+              <TextBlock Text="Privacy" Style="{StaticResource SectionTitle}" />
+              <TextBlock Text="Online metadata and AI identification are intentionally unavailable in this local-first release. Nexus does not send executable metadata, files, library contents, or account data to any service."
+                         Foreground="{DynamicResource NexusMutedText}"
+                         TextWrapping="Wrap"
+                         LineHeight="22"
+                         Margin="0,9,0,0" />
+            </StackPanel>
+          </Border>
+          <Border Style="{StaticResource Card}">
+            <StackPanel>
+              <TextBlock Text="Diagnostics" Style="{StaticResource SectionTitle}" />
+              <TextBlock Text="{Binding DataStorageDescription}" Foreground="{DynamicResource NexusMutedText}" TextWrapping="Wrap" Margin="0,8,0,15" />
+              <WrapPanel>
+                <Button Content="Open data folder" Command="{Binding OpenDataCommand}" Style="{StaticResource QuietButton}" Margin="0,0,10,0" />
+                <Button Content="Save settings" Style="{StaticResource AccentButton}" Command="{Binding SaveCommand}" />
+              </WrapPanel>
+              <TextBlock Text="{Binding Status}" Foreground="{DynamicResource NexusMutedText}" Margin="0,14,0,0" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
     </DataTemplate>
+
     <DataTemplate DataType="{x:Type vm:InfoPageViewModel}">
-      <StackPanel Margin="32,24,32,32" MaxWidth="760"><TextBlock Text="{Binding Title}" FontSize="30" FontWeight="SemiBold" /><TextBlock Text="{Binding Subtitle}" Foreground="{StaticResource NexusMutedText}" Margin="0,5,0,24" /><Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="{Binding Glyph}" FontSize="36" Foreground="{StaticResource NexusAccent}" /><TextBlock Text="{Binding Heading}" FontSize="20" FontWeight="SemiBold" Margin="0,12,0,0" /><TextBlock Text="{Binding Body}" Foreground="{StaticResource NexusMutedText}" TextWrapping="Wrap" LineHeight="22" Margin="0,8,0,0" /></StackPanel></Border></StackPanel>
+      <StackPanel Margin="38,32,38,38" MaxWidth="820">
+        <TextBlock Text="NEXUS" Style="{StaticResource Eyebrow}" />
+        <TextBlock Text="{Binding Title}" Style="{StaticResource PageTitle}" Margin="0,7,0,0" />
+        <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource NexusMutedText}" Margin="0,7,0,26" />
+        <Border Style="{StaticResource Card}">
+          <StackPanel>
+            <Border Width="46" Height="46" Background="#217B6CFF" CornerRadius="14" HorizontalAlignment="Left">
+              <TextBlock Text="{Binding Glyph}" FontSize="20" Foreground="{DynamicResource NexusText}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <TextBlock Text="{Binding Heading}" FontSize="20" FontWeight="SemiBold" Margin="0,18,0,0" />
+            <TextBlock Text="{Binding Body}" Foreground="{DynamicResource NexusMutedText}" TextWrapping="Wrap" LineHeight="23" Margin="0,9,0,0" />
+          </StackPanel>
+        </Border>
+      </StackPanel>
     </DataTemplate>
   </Window.Resources>
-  <Grid>
-    <Grid.ColumnDefinitions><ColumnDefinition Width="228" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-    <Border Background="#121722" BorderBrush="#273044" BorderThickness="0,0,1,0">
-      <Grid Margin="10,18,10,12"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-        <StackPanel Orientation="Horizontal" Margin="11,0,0,18"><Border Width="30" Height="30" CornerRadius="8" Background="{StaticResource NexusAccent}"><Viewbox Margin="7"><Path Fill="White" Data="M 0,0 L 10,0 10,10 20,10 20,20 10,20 10,30 0,30 Z M 20,0 L 30,0 30,30 20,30 Z" /></Viewbox></Border><StackPanel Margin="10,0,0,0"><TextBlock Text="NEXUS" FontWeight="Bold" FontSize="16" /><TextBlock Text="LAUNCHER" Foreground="{StaticResource NexusMutedText}" FontSize="9" FontWeight="SemiBold" /></StackPanel></StackPanel>
-        <ListBox Grid.Row="1" ItemsSource="{Binding Navigation}" SelectedItem="{Binding SelectedNavigation}" ItemContainerStyle="{StaticResource SidebarItem}"><ListBox.ItemTemplate><DataTemplate DataType="{x:Type infra:NavigationItem}"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="25" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><TextBlock Text="{Binding Glyph}" FontSize="16" VerticalAlignment="Center" /><TextBlock Grid.Column="1" Text="{Binding Title}" VerticalAlignment="Center" FontWeight="SemiBold" /></Grid></DataTemplate></ListBox.ItemTemplate></ListBox>
-        <Button Grid.Row="2" Content="⌘  Command palette" Command="{Binding OpenCommandPaletteCommand}" HorizontalAlignment="Stretch" Foreground="{StaticResource NexusMutedText}" />
+
+  <Grid Background="{DynamicResource NexusBackground}">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="250" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+
+    <Border Background="{DynamicResource NexusPanel}" BorderBrush="#26344C" BorderThickness="0,0,1,0">
+      <Grid Margin="14,20,14,14">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <StackPanel Orientation="Horizontal" Margin="9,0,7,25">
+          <Border Width="38" Height="38" CornerRadius="13" ClipToBounds="True">
+            <Border.Background>
+              <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#A78BFA" Offset="0" />
+                <GradientStop Color="#5B5AE6" Offset="1" />
+              </LinearGradientBrush>
+            </Border.Background>
+            <Viewbox Margin="9">
+              <Path Fill="White" Data="M 0,0 L 10,0 10,10 20,10 20,20 10,20 10,30 0,30 Z M 20,0 L 30,0 30,30 20,30 Z" />
+            </Viewbox>
+          </Border>
+          <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
+            <TextBlock Text="NEXUS" FontWeight="Bold" FontSize="17" />
+            <TextBlock Text="LOCAL LAUNCHER" Foreground="{DynamicResource NexusMutedText}" FontSize="9" FontWeight="SemiBold" />
+          </StackPanel>
+        </StackPanel>
+
+        <Grid Grid.Row="1">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+          </Grid.RowDefinitions>
+          <TextBlock Text="LIBRARY" Style="{StaticResource Eyebrow}" Margin="10,0,0,9" />
+          <ListBox Grid.Row="1"
+                   ItemsSource="{Binding Navigation}"
+                   SelectedItem="{Binding SelectedNavigation}"
+                   ItemContainerStyle="{StaticResource SidebarItem}"
+                   ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+            <ListBox.ItemTemplate>
+              <DataTemplate DataType="{x:Type infra:NavigationItem}">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="28" />
+                    <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
+                  <TextBlock Text="{Binding Glyph}"
+                             FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets, Segoe UI Symbol"
+                             FontSize="15"
+                             VerticalAlignment="Center"
+                             HorizontalAlignment="Center" />
+                  <TextBlock Grid.Column="1" Text="{Binding Title}" VerticalAlignment="Center" FontSize="13" FontWeight="SemiBold" />
+                </Grid>
+              </DataTemplate>
+            </ListBox.ItemTemplate>
+          </ListBox>
+        </Grid>
+
+        <StackPanel Grid.Row="2">
+          <Border Background="#15202A41" BorderBrush="#2F405A77" BorderThickness="1" CornerRadius="12" Padding="12" Margin="0,0,0,10">
+            <StackPanel>
+              <TextBlock Text="LOCAL-FIRST" Style="{StaticResource Eyebrow}" />
+              <TextBlock Text="No account. No tracking." Foreground="{DynamicResource NexusMutedText}" FontSize="11" Margin="0,4,0,0" />
+            </StackPanel>
+          </Border>
+          <Button Content="Command palette"
+                  Command="{Binding OpenCommandPaletteCommand}"
+                  Style="{StaticResource QuietButton}"
+                  HorizontalAlignment="Stretch"
+                  Foreground="{DynamicResource NexusMutedText}" />
+        </StackPanel>
       </Grid>
     </Border>
-    <Grid Grid.Column="1"><Grid.RowDefinitions><RowDefinition Height="*" /><RowDefinition Height="31" /></Grid.RowDefinitions>
-      <ContentControl Content="{Binding CurrentPage}" />
-      <Border Grid.Row="1" Background="#121722" BorderBrush="#273044" BorderThickness="0,1,0,0" Padding="18,6"><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="{Binding GlobalStatus}" Foreground="{StaticResource NexusMutedText}" FontSize="12" TextTrimming="CharacterEllipsis" /><TextBlock Grid.Column="1" Text="Ctrl+K" Foreground="{StaticResource NexusMutedText}" FontSize="12" /></Grid></Border>
+
+    <Grid Grid.Column="1">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="68" />
+        <RowDefinition Height="*" />
+        <RowDefinition Height="32" />
+      </Grid.RowDefinitions>
+      <Border Background="#1033425B" BorderBrush="#26344C" BorderThickness="0,0,0,1">
+        <Grid Margin="38,0">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <TextBlock Text="{Binding SelectedNavigation.Title}" FontSize="14" FontWeight="SemiBold" />
+            <Border Style="{StaticResource SmallPill}" Margin="12,0,0,0" Padding="7,3">
+              <TextBlock Text="Ctrl + K" Foreground="{DynamicResource NexusMutedText}" FontSize="10" FontWeight="SemiBold" />
+            </Border>
+          </StackPanel>
+          <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+            <Button Content="&#xE721;"
+                    FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                    ToolTip="Open command palette"
+                    Command="{Binding OpenCommandPaletteCommand}"
+                    Style="{StaticResource QuietButton}"
+                    Padding="9,6"
+                    Margin="0,0,9,0" />
+            <Button Content="Rescan"
+                    Command="{Binding ScanCommand}"
+                    Style="{StaticResource AccentButton}"
+                    Padding="14,7" />
+          </StackPanel>
+        </Grid>
+      </Border>
+      <ContentControl Grid.Row="1" Content="{Binding CurrentPage}" />
+      <Border Grid.Row="2" Background="{DynamicResource NexusPanel}" BorderBrush="#26344C" BorderThickness="0,1,0,0" Padding="38,7">
+        <Grid>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <TextBlock Text="{Binding GlobalStatus}" Foreground="{DynamicResource NexusMutedText}" FontSize="11" TextTrimming="CharacterEllipsis" />
+          <TextBlock Grid.Column="1" Text="NEXUS · LOCAL MODE" Foreground="{DynamicResource NexusMutedText}" FontSize="10" FontWeight="SemiBold" />
+        </Grid>
+      </Border>
     </Grid>
-    <Border Grid.ColumnSpan="2" Background="#B010131C" Visibility="{Binding IsCommandPaletteOpen, Converter={StaticResource BoolToVisibility}}"><Grid HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,130,0,0" Width="600"><Border Background="#202737" CornerRadius="14" Padding="12" BorderBrush="#59667F" BorderThickness="1"><StackPanel><Grid><TextBox Text="{Binding CommandQuery, UpdateSourceTrigger=PropertyChanged}" FontSize="16" Padding="12" ToolTip="Search commands" /><Button Content="×" Command="{Binding CloseCommandPaletteCommand}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,5,0" Padding="8,2" Background="Transparent" BorderThickness="0" /></Grid><ListBox ItemsSource="{Binding FilteredPaletteCommands}" BorderThickness="0" Margin="0,8,0,0"><ListBox.ItemTemplate><DataTemplate DataType="{x:Type infra:PaletteCommand}"><Button Command="{Binding Command}" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch" Padding="12"><StackPanel><TextBlock Text="{Binding Name}" FontWeight="SemiBold" /><TextBlock Text="{Binding Description}" Foreground="{StaticResource NexusMutedText}" FontSize="12" Margin="0,3,0,0" /></StackPanel></Button></DataTemplate></ListBox.ItemTemplate></ListBox></StackPanel></Border></Grid></Border>
-    <Border Grid.ColumnSpan="2" Background="#E010131C" Visibility="{Binding IsOnboardingOpen, Converter={StaticResource BoolToVisibility}}"><Border Background="#202737" Width="600" Padding="38" CornerRadius="18" HorizontalAlignment="Center" VerticalAlignment="Center"><StackPanel><TextBlock Text="NEXUS // FIRST RUN" Foreground="{StaticResource NexusAccent}" FontWeight="Bold" FontSize="12" /><TextBlock Text="{Binding OnboardingTitle}" FontSize="30" FontWeight="SemiBold" Margin="0,12,0,0" /><TextBlock Text="{Binding OnboardingBody}" Foreground="{StaticResource NexusMutedText}" FontSize="15" TextWrapping="Wrap" LineHeight="24" Margin="0,12,0,28" /><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Orientation="Horizontal"><Button Content="Back" Command="{Binding PreviousOnboardingCommand}" Margin="0,0,8,0" /><TextBlock Text="{Binding OnboardingStep, StringFormat=Step {0} of 3}" Foreground="{StaticResource NexusMutedText}" VerticalAlignment="Center" /></StackPanel><StackPanel Grid.Column="1" Orientation="Horizontal"><Button Content="Next" Command="{Binding NextOnboardingCommand}" Margin="0,0,8,0" /><Button Content="Start Nexus" Style="{StaticResource AccentButton}" Command="{Binding FinishOnboardingCommand}" /></StackPanel></Grid></StackPanel></Border></Border>
+
+    <Border Grid.ColumnSpan="2"
+            Background="#B80A0D14"
+            Visibility="{Binding IsCommandPaletteOpen, Converter={StaticResource BoolToVisibility}}">
+      <Grid HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,130,0,0" Width="640">
+        <Border Background="{DynamicResource NexusPanelRaised}" CornerRadius="18" Padding="14" BorderBrush="#61729A" BorderThickness="1">
+          <StackPanel>
+            <Grid>
+              <Border Height="50" Background="{DynamicResource NexusPanel}" BorderBrush="#3B4C6B" BorderThickness="1" CornerRadius="12">
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="46" />
+                    <ColumnDefinition Width="*" />
+                  </Grid.ColumnDefinitions>
+                  <TextBlock Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Foreground="{DynamicResource NexusMutedText}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  <TextBox Grid.Column="1" Text="{Binding CommandQuery, UpdateSourceTrigger=PropertyChanged}" FontSize="16" BorderThickness="0" Background="Transparent" VerticalContentAlignment="Center" ToolTip="Search commands" />
+                </Grid>
+              </Border>
+              <Button Content="&#xE711;"
+                      FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets"
+                      Command="{Binding CloseCommandPaletteCommand}"
+                      Style="{StaticResource QuietButton}"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
+                      Margin="0,0,8,0"
+                      Padding="6,3"
+                      BorderThickness="0" />
+            </Grid>
+            <TextBlock Text="COMMANDS" Style="{StaticResource Eyebrow}" Margin="8,16,0,6" />
+            <ListBox ItemsSource="{Binding FilteredPaletteCommands}" BorderThickness="0" MaxHeight="360">
+              <ListBox.ItemTemplate>
+                <DataTemplate DataType="{x:Type infra:PaletteCommand}">
+                  <Button Command="{Binding Command}" Background="Transparent" BorderBrush="Transparent" HorizontalContentAlignment="Stretch" Padding="14,11">
+                    <StackPanel>
+                      <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                      <TextBlock Text="{Binding Description}" Foreground="{DynamicResource NexusMutedText}" FontSize="12" Margin="0,4,0,0" />
+                    </StackPanel>
+                  </Button>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </Border>
+
+    <Border Grid.ColumnSpan="2"
+            Background="#DD0A0D14"
+            Visibility="{Binding IsOnboardingOpen, Converter={StaticResource BoolToVisibility}}">
+      <Border Background="{DynamicResource NexusPanelRaised}"
+              Width="650"
+              Padding="42"
+              CornerRadius="22"
+              BorderBrush="#64769F"
+              BorderThickness="1"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center">
+        <StackPanel>
+          <Border Style="{StaticResource SmallPill}" HorizontalAlignment="Left" Background="#197B6CFF" BorderBrush="#4E9A8CFF">
+            <TextBlock Text="NEXUS · FIRST RUN" FontSize="10" FontWeight="Bold" />
+          </Border>
+          <TextBlock Text="{Binding OnboardingTitle}" FontSize="31" FontWeight="SemiBold" Margin="0,17,0,0" />
+          <TextBlock Text="{Binding OnboardingBody}" Foreground="{DynamicResource NexusMutedText}" FontSize="15" TextWrapping="Wrap" LineHeight="24" Margin="0,12,0,31" />
+          <Grid>
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal">
+              <Button Content="Back" Command="{Binding PreviousOnboardingCommand}" Style="{StaticResource QuietButton}" Margin="0,0,10,0" />
+              <TextBlock Text="{Binding OnboardingStep, StringFormat=Step {0} of 3}" Foreground="{DynamicResource NexusMutedText}" VerticalAlignment="Center" FontSize="12" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+              <Button Content="Next" Command="{Binding NextOnboardingCommand}" Style="{StaticResource QuietButton}" Margin="0,0,10,0" />
+              <Button Content="Start Nexus" Style="{StaticResource AccentButton}" Command="{Binding FinishOnboardingCommand}" />
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </Border>
+    </Border>
   </Grid>
 </Window>

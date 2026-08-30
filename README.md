@@ -4,7 +4,7 @@
 
 Nexus Launcher is a local-first Windows launcher for bringing installed games and desktop applications into one searchable library. It is built as a WPF application on .NET 9 and targets 64-bit Windows 10 (22H2 or later) and Windows 11.
 
-> **Release status:** Nexus `v0.1.0` is pre-release software. Treat it as an early release until a stable version is published.
+> **Release status:** Nexus `v0.1.1` is pre-release software. Treat it as an early release until a stable version is published.
 
 ## Why Nexus
 

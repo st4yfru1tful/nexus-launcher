@@ -2,7 +2,7 @@
 ; Package.ps1 supplies MyAppVersion and SourceDir for release builds.
 
 #ifndef MyAppVersion
-  #define MyAppVersion "0.1.0"
+  #define MyAppVersion "0.1.1"
 #endif
 
 #ifndef SourceDir

@@ -8,6 +8,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 No unreleased changes yet.
 
+## [0.1.1] - 2026-08-29
+
+### Fixed
+
+- Prevented the startup crash caused by WPF freezing shared theme brushes before Nexus applied the saved theme.
+- Added a regression test covering application of a theme to a frozen WPF brush resource.
+
+### Changed
+
+- Rebuilt the launcher UI with a clearer visual hierarchy, resilient dark and light themes, a refined navigation rail, responsive library details, polished overlays, and custom theme-aware dropdowns.
+- Added an intentional empty-state panel to the Library details view.
+
 ## [0.1.0] - 2026-08-29
 
 Initial public prerelease of Nexus Launcher for Windows.
@@ -29,5 +41,6 @@ Initial public prerelease of Nexus Launcher for Windows.
 
 - This prerelease does not include Epic, GOG, EA, Ubisoft, Battle.net, Xbox, or itch.io providers; metadata enrichment; connected cloud sync; playtime tracking; automatic updates; or binary code signing.
 
-[Unreleased]: ../../compare/v0.1.0...HEAD
+[Unreleased]: ../../compare/v0.1.1...HEAD
+[0.1.1]: ../../compare/v0.1.0...v0.1.1
 [0.1.0]: ../../releases/tag/v0.1.0

@@ -268,7 +268,9 @@ public sealed class ShellViewModel : ObservableObject
 
     private static void SetBrush(string key, string color)
     {
-        if (Application.Current.Resources[key] is SolidColorBrush brush) brush.Color = (Color)ColorConverter.ConvertFromString(color);
+        // Brushes referenced from XAML styles can be frozen by WPF. Replacing the
+        // resource is safe in either state; mutating a frozen shared brush is not.
+        Application.Current.Resources[key] = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color));
     }
 
     private static bool UsesSystemDarkTheme()
